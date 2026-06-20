@@ -3,3 +3,26 @@
 @import 'tailwindcss/utilities.css';
 
 @import 'nativewind/theme';
+
+@import 'tailwindcss';
+
+@theme {
+  /* ── Brand colors — mirrors the website exactly ── */
+  --color-bg: #0a0a0b;
+  --color-surface: #111113;
+  --color-surface2: #161618;
+  --color-border: #1e1e22;
+  --color-safe: #22c55e;
+  --color-blocked: #f59e0b;
+  --color-urgent: #ef4444;
+  --color-accent: #fbbf24;
+  --color-text: #e8e8ed;
+  --color-dim: #6b6b7a;
+  --color-faint: #3a3a44;
+
+  /* ── JetBrains Mono font families ── */
+  --font-family-mono: 'JetBrainsMono_400Regular', ui-monospace, monospace;
+  --font-family-mono-medium: 'JetBrainsMono_500Medium', ui-monospace, monospace;
+  --font-family-mono-bold: 'JetBrainsMono_700Bold', ui-monospace, monospace;
+  --font-family-mono-extrabold: 'JetBrainsMono_800ExtraBold', ui-monospace, monospace;
+}
