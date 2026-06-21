@@ -19,7 +19,11 @@
         "backgroundColor": "#0a0a0b"
       },
       "package": "com.tushcmd.fns",
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE", "POST_NOTIFICATIONS"]
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -31,48 +35,18 @@
           "color": "#f59e0b",
           "defaultChannel": "fns"
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c00d92c9-3edb-40e0-8530-47cf16aef9d5"
+      }
     }
   }
 }
-// {
-//   "expo": {
-//     "name": "fns",
-//     "slug": "fns",
-//     "version": "1.0.0",
-//     "web": {
-//       "favicon": "./assets/favicon.png"
-//     },
-//     "experiments": {
-//       "tsconfigPaths": true
-//     },
-//     "plugins": [
-//       "expo-router",
-//       "expo-font",
-//       "expo-secure-store"
-//     ],
-//     "orientation": "portrait",
-//     "icon": "./assets/icon.png",
-//     "userInterfaceStyle": "light",
-//     "splash": {
-//       "image": "./assets/splash.png",
-//       "resizeMode": "contain",
-//       "backgroundColor": "#ffffff"
-//     },
-//     "assetBundlePatterns": [
-//       "**/*"
-//     ],
-//     "ios": {
-//       "supportsTablet": true
-//     },
-//     "android": {
-//       "adaptiveIcon": {
-//         "foregroundImage": "./assets/adaptive-icon.png",
-//         "backgroundColor": "#ffffff"
-//       }
-//     }
-//   }
-// }
