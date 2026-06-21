@@ -1,30 +1,34 @@
 {
-  "cli": {
-    "version": ">= 19.0.8",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
+  "expo": {
+    "name": "FNS",
+    "slug": "fns-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "fnewsteer",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0b"
       },
-      "env": {
-        "NPM_FLAGS": "--legacy-peer-deps"
-      }
+      "package": "com.tushcmd.fns",
+      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE", "POST_NOTIFICATIONS"]
     },
-    "production": {
-      "autoIncrement": true,
-      "android": {
-        "buildType": "app-bundle"
-      }
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#f59e0b",
+          "defaultChannel": "fns"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
-  },
-  "submit": {
-    "production": {}
   }
 }
