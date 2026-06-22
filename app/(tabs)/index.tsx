@@ -2,10 +2,10 @@ import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { useWatchlist } from '@/hooks/useWatchlist';
-import { PairCard } from '@/components/dashboard/PairCard';
-import { EmptyWatchlist } from '@/components/dashboard/EmptyWatchlist';
-import { colors } from '@/constants/theme';
+import { useWatchlist } from '../../hooks/useWatchlist';
+import { PairCard } from '../../components/dashboard/PairCard';
+import { EmptyWatchlist } from '../../components/dashboard/EmptyWatchlist';
+import { colors } from '../../constants/theme';
 
 function UTCClock() {
   const [time, setTime] = useState(new Date().toUTCString().slice(17, 25));
