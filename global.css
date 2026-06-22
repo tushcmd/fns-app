@@ -1,26 +1,27 @@
-/* @import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/preflight.css' layer(base);
-@import 'tailwindcss/utilities.css';
-
-@import 'nativewind/theme'; */
-
 @import 'tailwindcss';
+@import 'nativewind/theme';
 
 @theme {
-  /* ── Brand colors — mirrors the website exactly ── */
+  /* ── Background / Surface ── */
   --color-bg: #0a0a0b;
   --color-surface: #111113;
   --color-surface2: #161618;
+
+  /* ── Borders ── */
   --color-border: #1e1e22;
+
+  /* ── Status colors ── */
   --color-safe: #22c55e;
   --color-blocked: #f59e0b;
   --color-urgent: #ef4444;
   --color-accent: #fbbf24;
+
+  /* ── Text ── */
   --color-text: #e8e8ed;
   --color-dim: #6b6b7a;
   --color-faint: #3a3a44;
 
-  /* ── JetBrains Mono font families ── */
+  /* ── Font families — must match the loaded font names exactly ── */
   --font-family-mono: 'JetBrainsMono_400Regular', ui-monospace, monospace;
   --font-family-mono-medium: 'JetBrainsMono_500Medium', ui-monospace, monospace;
   --font-family-mono-bold: 'JetBrainsMono_700Bold', ui-monospace, monospace;
