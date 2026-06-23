@@ -1,4 +1,4 @@
-import {
+﻿import {
     View,
     Text,
     Switch,
@@ -9,12 +9,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
+import { router } from "expo-router";
 import * as Notifications from "expo-notifications";
 import { useWatchlist } from "../../../hooks/useWatchlist";
 import { useSettings } from "../../../hooks/useSettings";
 import { getApiKey, setApiKey } from "../../../lib/storage";
 import { DEFAULT_PAIRS } from "../../../constants/pairs";
 import { colors } from "../../../constants/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const NOTIFY_OPTIONS: Array<5 | 10 | 15 | 30> = [5, 10, 15, 30];
 
@@ -87,6 +89,11 @@ export default function Settings() {
             setCustomPair("");
             setShowPicker(false);
         }
+    }
+
+    async function resetOnboarding() {
+        await AsyncStorage.removeItem("fns:hasOnboarded");
+        router.replace("/onboarding");
     }
 
     if (!settings) return null;
@@ -267,6 +274,18 @@ export default function Settings() {
                     <LinkRow label="EVENT TAXONOMY" url="https://tushcmd.github.io/fns-fe/event-taxonomy/" />
                     <LinkRow label="GITHUB" url="https://github.com/tushcmd/fnewsteer" />
                     <LinkRow label="𝕏 @0xtush" url="https://x.com/0xtush" />
+
+                    {/* ── Development ── */}
+                    <SectionLabel>DEVELOPMENT</SectionLabel>
+                    <TouchableOpacity
+                        className="py-3 border-b border-border"
+                        onPress={resetOnboarding}
+                        activeOpacity={0.7}
+                    >
+                        <Text className="text-blocked font-mono text-xs tracking-wide">
+                            RESET ONBOARDING
+                        </Text>
+                    </TouchableOpacity>
 
                     {/* ── Legal ── */}
                     <SectionLabel>LEGAL</SectionLabel>
