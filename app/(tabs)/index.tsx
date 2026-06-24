@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useWatchlist } from '../../hooks/useWatchlist';
 import { PairCard } from '../../components/dashboard/PairCard';
 import { EmptyWatchlist } from '../../components/dashboard/EmptyWatchlist';
-import { colors } from '../../constants/theme';
+import { colors, fonts } from '../../constants/theme';
 
 function UTCClock() {
   const [time, setTime] = useState(new Date().toUTCString().slice(17, 25));
@@ -13,7 +13,11 @@ function UTCClock() {
     const id = setInterval(() => setTime(new Date().toUTCString().slice(17, 25)), 1000);
     return () => clearInterval(id);
   }, []);
-  return <Text className="text-dim font-mono text-xs tracking-widest">{time} UTC</Text>;
+  return (
+    <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 2 }}>
+      {time} UTC
+    </Text>
+  );
 }
 
 export default function Dashboard() {
@@ -28,9 +32,14 @@ export default function Dashboard() {
   }
 
   return (
-    <SafeAreaView className="bg-bg flex-1">
-      <View className="border-border flex-row items-center justify-between border-b px-5 py-4">
-        <Text className="text-text font-mono-extrabold text-base tracking-widest">◎ FNS</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View
+        className="flex-row items-center justify-between border-b px-5 py-4"
+        style={{ borderBottomColor: colors.border }}
+      >
+        <Text style={{ color: colors.text, fontFamily: fonts.extraBold, fontSize: 16, letterSpacing: 2 }}>
+          ◎ FNS
+        </Text>
         <UTCClock />
       </View>
 
@@ -43,7 +52,15 @@ export default function Dashboard() {
           contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }) => <PairCard pair={item} />}
           ListHeaderComponent={
-            <Text className="text-faint mb-4 font-mono text-xs tracking-widest">
+            <Text
+              style={{
+                color: colors.faint,
+                fontFamily: fonts.regular,
+                fontSize: 12,
+                letterSpacing: 2,
+                marginBottom: 16,
+              }}
+            >
               WATCHLIST — {pairs.length} PAIR{pairs.length > 1 ? 'S' : ''}
             </Text>
           }

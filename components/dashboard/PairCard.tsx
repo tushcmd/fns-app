@@ -1,16 +1,16 @@
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { SafetyBadge } from "@/components/ui/SafetyBadge";
-import { usePairCheck } from "@/hooks/usePairCheck";
-import { colors } from "@/constants/theme";
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafetyBadge } from '@/components/ui/SafetyBadge';
+import { usePairCheck } from '@/hooks/usePairCheck';
+import { colors, fonts, alpha } from '@/constants/theme';
 
 interface Props {
-  pair:     string;
+  pair: string;
   onPress?: () => void;
 }
 
 function timeUntil(isoString: string): string {
   const diff = new Date(isoString).getTime() - Date.now();
-  if (diff <= 0) return "now";
+  if (diff <= 0) return 'now';
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
@@ -21,49 +21,70 @@ function timeUntil(isoString: string): string {
 export function PairCard({ pair, onPress }: Props) {
   const { data, isLoading, isError } = usePairCheck(pair);
 
+  const borderColor = data
+    ? data.safe_to_trade
+      ? alpha(colors.safe, 0.2)
+      : alpha(colors.blocked, 0.3)
+    : colors.border;
+
+  const accentBarColor = data
+    ? data.safe_to_trade
+      ? colors.safe
+      : colors.blocked
+    : colors.border;
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      className={`bg-surface border rounded-sm mb-2 overflow-hidden ${
-        data
-          ? data.safe_to_trade
-            ? "border-safe/20"
-            : "border-blocked/30"
-          : "border-border"
-      }`}
+      style={{
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor,
+        borderRadius: 2,
+        marginBottom: 8,
+        overflow: 'hidden',
+      }}
     >
       <View
-        className={`absolute left-0 top-0 bottom-0 w-0.5 ${
-          data
-            ? data.safe_to_trade ? "bg-safe" : "bg-blocked"
-            : "bg-border"
-        }`}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 2,
+          backgroundColor: accentBarColor,
+        }}
       />
-      <View className="px-4 py-4 pl-5">
+
+      <View style={{ paddingHorizontal: 16, paddingVertical: 16, paddingLeft: 20 }}>
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-text font-mono-bold text-base tracking-wider">
+          <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 15, letterSpacing: 1 }}>
             {pair}
           </Text>
           {isLoading && <ActivityIndicator size="small" color={colors.dim} />}
-          {isError   && <Text className="text-urgent font-mono text-xs">ERROR</Text>}
-          {data      && <SafetyBadge safe={data.safe_to_trade} />}
+          {isError && (
+            <Text style={{ color: colors.urgent, fontFamily: fonts.regular, fontSize: 11 }}>ERROR</Text>
+          )}
+          {data && <SafetyBadge safe={data.safe_to_trade} />}
         </View>
 
         {data && (
-          <Text className="text-dim font-mono text-xs tracking-wide">
+          <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
             {data.safe_to_trade
-              ? "No active blackout windows"
+              ? 'No active blackout windows'
               : data.blocking_events
                   .map((e) => `${e.title} · clears in ${timeUntil(e.window_end)}`)
-                  .join("  ·  ")}
+                  .join('  ·  ')}
           </Text>
         )}
         {isLoading && !data && (
-          <Text className="text-faint font-mono text-xs tracking-wide">Checking…</Text>
+          <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
+            Checking…
+          </Text>
         )}
         {isError && (
-          <Text className="text-faint font-mono text-xs tracking-wide">
+          <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
             Could not reach API
           </Text>
         )}

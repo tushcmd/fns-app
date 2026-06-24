@@ -1,29 +1,47 @@
-import { View, Text } from "react-native";
+import { View, Text } from 'react-native';
+import { colors, fonts, alpha } from '@/constants/theme';
 
 interface Props {
   safe: boolean;
-  size?: "sm" | "lg";
+  size?: 'sm' | 'lg';
 }
 
-export function SafetyBadge({ safe, size = "sm" }: Props) {
-  const isLg = size === "lg";
+export function SafetyBadge({ safe, size = 'sm' }: Props) {
+  const isLg = size === 'lg';
+  const dotSize = isLg ? 10 : 8;
+  const fontSize = isLg ? 13 : 11;
+
   return (
     <View
-      className={`flex-row items-center gap-2 px-3 py-1.5 rounded border ${
-        safe ? "bg-safe/10 border-safe/30" : "bg-blocked/10 border-blocked/30"
-      }`}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 4,
+        backgroundColor: safe ? alpha(colors.safe, 0.1) : alpha(colors.blocked, 0.1),
+        borderWidth: 1,
+        borderColor: safe ? alpha(colors.safe, 0.3) : alpha(colors.blocked, 0.3),
+      }}
     >
       <View
-        className={`rounded-full ${safe ? "bg-safe" : "bg-blocked"} ${
-          isLg ? "w-2.5 h-2.5" : "w-2 h-2"
-        }`}
+        style={{
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
+          backgroundColor: safe ? colors.safe : colors.blocked,
+        }}
       />
       <Text
-        className={`font-mono-bold tracking-widest ${
-          safe ? "text-safe" : "text-blocked"
-        } ${isLg ? "text-sm" : "text-xs"}`}
+        style={{
+          fontFamily: fonts.bold,
+          fontSize,
+          letterSpacing: 1.5,
+          color: safe ? colors.safe : colors.blocked,
+        }}
       >
-        {safe ? "CLEAR" : "BLOCKED"}
+        {safe ? 'CLEAR' : 'BLOCKED'}
       </Text>
     </View>
   );

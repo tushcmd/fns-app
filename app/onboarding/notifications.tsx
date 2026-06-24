@@ -1,75 +1,156 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { requestNotificationPermissions } from "../../lib/notifications";
-import { setHasOnboarded } from "../../lib/storage";
+import { View, Text, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { requestNotificationPermissions } from '../../lib/notifications';
+import { setHasOnboarded } from '../../lib/storage';
+import { colors, fonts, alpha } from '../../constants/theme';
 
 async function finish() {
-    await setHasOnboarded();
-    router.replace("/(tabs)");
+  await setHasOnboarded();
+  router.replace('/(tabs)');
 }
 
 export default function OnboardingNotifications() {
-    return (
-        <SafeAreaView className="flex-1 bg-bg">
-            <View className="flex-1 px-6 pt-12 pb-10 justify-between">
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View className="flex-1 px-6 pt-12 pb-10 justify-between">
 
-                <View>
-                    <Text className="text-faint font-mono text-xs tracking-widest mb-8">
-                        STEP 3 OF 3
-                    </Text>
-                    <Text className="text-text font-mono-extrabold text-xl tracking-wider mb-2">
-                        STAY AHEAD OF{"\n"}
-                        <Text className="text-blocked">THE BLACKOUT</Text>
-                    </Text>
-                    <Text className="text-dim font-mono text-sm leading-relaxed mb-10">
-                        FNS can notify you before a blackout window opens — so you&apos;re
-                        never caught in a trade when NFP drops.
-                    </Text>
+        <View>
+          <Text
+            style={{
+              color: colors.faint,
+              fontFamily: fonts.regular,
+              fontSize: 12,
+              letterSpacing: 2,
+              marginBottom: 32,
+            }}
+          >
+            STEP 3 OF 3
+          </Text>
+          <Text
+            style={{
+              color: colors.text,
+              fontFamily: fonts.extraBold,
+              fontSize: 20,
+              letterSpacing: 1,
+              marginBottom: 8,
+            }}
+          >
+            STAY AHEAD OF{'\n'}
+            <Text style={{ color: colors.blocked }}>THE BLACKOUT</Text>
+          </Text>
+          <Text
+            style={{
+              color: colors.dim,
+              fontFamily: fonts.regular,
+              fontSize: 14,
+              lineHeight: 22,
+              marginBottom: 40,
+            }}
+          >
+            FNS can notify you before a blackout window opens — so you&apos;re
+            never caught in a trade when NFP drops.
+          </Text>
 
-                    {[
-                        ["🔔", "Alert X minutes before a window opens"],
-                        ["🚫", "Immediate alert when a window is currently active"],
-                        ["✅", "All times based on your watched pairs only"],
-                    ].map(([icon, text]) => (
-                        <View key={text} className="flex-row items-start mb-5">
-                            <Text className="text-accent font-mono text-base mr-3">{icon}</Text>
-                            <Text className="text-dim font-mono text-sm leading-relaxed flex-1">
-                                {text}
-                            </Text>
-                        </View>
-                    ))}
-
-                    <View className="border border-border rounded px-4 py-3 mt-4">
-                        <Text className="text-faint font-mono text-xs leading-relaxed">
-                            All notifications are scheduled locally on your device. No data
-                            is sent to any server.
-                        </Text>
-                    </View>
-                </View>
-
-                <View>
-                    <TouchableOpacity
-                        className="bg-accent/10 border border-accent/30 rounded py-4 items-center mb-3"
-                        onPress={async () => {
-                            await requestNotificationPermissions();
-                            await finish();
-                        }}
-                        activeOpacity={0.7}
-                    >
-                        <Text className="text-accent font-mono-bold text-xs tracking-widest">
-                            ENABLE NOTIFICATIONS
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={finish} activeOpacity={0.7}>
-                        <Text className="text-faint font-mono text-xs tracking-widest text-center">
-                            SKIP — ENABLE LATER IN SETTINGS
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
+          {[
+            ['🔔', 'Alert X minutes before a window opens'],
+            ['🚫', 'Immediate alert when a window is currently active'],
+            ['✅', 'All times based on your watched pairs only'],
+          ].map(([icon, text]) => (
+            <View key={text} className="flex-row items-start mb-5">
+              <Text
+                style={{
+                  color: colors.accent,
+                  fontFamily: fonts.regular,
+                  fontSize: 16,
+                  marginRight: 12,
+                }}
+              >
+                {icon}
+              </Text>
+              <Text
+                style={{
+                  color: colors.dim,
+                  fontFamily: fonts.regular,
+                  fontSize: 14,
+                  lineHeight: 22,
+                  flex: 1,
+                }}
+              >
+                {text}
+              </Text>
             </View>
-        </SafeAreaView>
-    );
+          ))}
+
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 4,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginTop: 16,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.faint,
+                fontFamily: fonts.regular,
+                fontSize: 12,
+                lineHeight: 20,
+              }}
+            >
+              All notifications are scheduled locally on your device. No data
+              is sent to any server.
+            </Text>
+          </View>
+        </View>
+
+        <View>
+          <TouchableOpacity
+            style={{
+              backgroundColor: alpha(colors.accent, 0.1),
+              borderWidth: 1,
+              borderColor: alpha(colors.accent, 0.3),
+              borderRadius: 4,
+              paddingVertical: 16,
+              alignItems: 'center',
+              marginBottom: 12,
+            }}
+            onPress={async () => {
+              await requestNotificationPermissions();
+              await finish();
+            }}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={{
+                color: colors.accent,
+                fontFamily: fonts.bold,
+                fontSize: 12,
+                letterSpacing: 2,
+              }}
+            >
+              ENABLE NOTIFICATIONS
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={finish} activeOpacity={0.7}>
+            <Text
+              style={{
+                color: colors.faint,
+                fontFamily: fonts.regular,
+                fontSize: 12,
+                letterSpacing: 2,
+                textAlign: 'center',
+              }}
+            >
+              SKIP — ENABLE LATER IN SETTINGS
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+      </View>
+    </SafeAreaView>
+  );
 }

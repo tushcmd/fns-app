@@ -1,21 +1,30 @@
-import { View, Text } from "react-native";
+import { View, Text } from 'react-native';
+import { colors, fonts, alpha } from '@/constants/theme';
 
 interface Props {
   impact: string;
 }
 
 export function ImpactBadge({ impact }: Props) {
-  const isHigh = impact === "High";
+  const isHigh = impact === 'High';
   return (
     <View
-      className={`px-2 py-0.5 rounded border ${
-        isHigh ? "bg-urgent/10 border-urgent/20" : "bg-surface2 border-border"
-      }`}
+      style={{
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
+        backgroundColor: isHigh ? alpha(colors.urgent, 0.1) : colors.surface2,
+        borderWidth: 1,
+        borderColor: isHigh ? alpha(colors.urgent, 0.2) : colors.border,
+      }}
     >
       <Text
-        className={`font-mono-bold text-xs tracking-wider ${
-          isHigh ? "text-urgent" : "text-dim"
-        }`}
+        style={{
+          fontFamily: fonts.bold,
+          fontSize: 11,
+          letterSpacing: 1,
+          color: isHigh ? colors.urgent : colors.dim,
+        }}
       >
         {impact.toUpperCase()}
       </Text>
