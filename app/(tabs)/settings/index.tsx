@@ -8,12 +8,11 @@
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useWatchlist } from '../../../hooks/useWatchlist';
 import { useSettings } from '../../../hooks/useSettings';
-import { getApiKey, setApiKey } from '../../../lib/storage';
 import { DEFAULT_PAIRS } from '../../../constants/pairs';
 import { colors, fonts, alpha } from '../../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -39,13 +38,7 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View className="flex-row items-center justify-between py-3 border-b" style={rowBorder}>
       <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5 }}>
@@ -75,18 +68,8 @@ function LinkRow({ label, url }: { label: string; url: string }) {
 export default function Settings() {
   const { pairs, add, remove } = useWatchlist();
   const { settings, update } = useSettings();
-  const [apiKey, setApiKeyState] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [customPair, setCustomPair] = useState('');
-
-  useEffect(() => {
-    getApiKey().then(setApiKeyState);
-  }, []);
-
-  async function saveApiKey(key: string) {
-    setApiKeyState(key);
-    await setApiKey(key);
-  }
 
   async function sendTestNotification() {
     await Notifications.scheduleNotificationAsync({
@@ -117,6 +100,8 @@ export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView className="flex-1">
+
+        {/* Header */}
         <View className="px-5 py-4 border-b" style={rowBorder}>
           <Text style={{ color: colors.text, fontFamily: fonts.extraBold, fontSize: 16, letterSpacing: 2 }}>
             SETTINGS
@@ -125,6 +110,7 @@ export default function Settings() {
 
         <View className="px-5">
 
+          {/* ── Watchlist ── */}
           <SectionLabel>WATCHLIST</SectionLabel>
 
           {pairs.map((pair) => (
@@ -167,10 +153,7 @@ export default function Settings() {
                       borderWidth: 1,
                       borderColor: colors.border,
                     }}
-                    onPress={() => {
-                      add(p);
-                      setShowPicker(false);
-                    }}
+                    onPress={() => { add(p); setShowPicker(false); }}
                     activeOpacity={0.7}
                   >
                     <Text style={{ color: colors.dim, fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1 }}>
@@ -213,29 +196,20 @@ export default function Settings() {
             </View>
           )}
 
+          {/* ── Notifications ── */}
           <SectionLabel>NOTIFICATIONS</SectionLabel>
 
           <Row label="INCLUDE MEDIUM IMPACT">
             <Switch
               value={settings.includeMedium}
-              onValueChange={(v) => {
-                void update({ includeMedium: v });
-              }}
+              onValueChange={(v) => { void update({ includeMedium: v }); }}
               trackColor={{ false: colors.border, true: colors.accent + '50' }}
               thumbColor={colors.accent}
             />
           </Row>
 
           <View className="py-3 border-b" style={rowBorder}>
-            <Text
-              style={{
-                color: colors.dim,
-                fontFamily: fonts.regular,
-                fontSize: 12,
-                letterSpacing: 0.5,
-                marginBottom: 12,
-              }}
-            >
+            <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5, marginBottom: 12 }}>
               NOTIFY BEFORE WINDOW (MIN)
             </Text>
             <View className="flex-row gap-2">
@@ -244,21 +218,16 @@ export default function Settings() {
                 return (
                   <TouchableOpacity
                     key={opt}
-                    className="flex-1 py-2 rounded border items-center"
+                    className="flex-1 py-2 rounded items-center"
                     style={{
                       backgroundColor: isSelected ? alpha(colors.accent, 0.1) : colors.surface,
+                      borderWidth: 1,
                       borderColor: isSelected ? alpha(colors.accent, 0.4) : colors.border,
                     }}
                     onPress={() => update({ notifyMinutesBefore: opt })}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      style={{
-                        fontFamily: fonts.bold,
-                        fontSize: 12,
-                        color: isSelected ? colors.accent : colors.dim,
-                      }}
-                    >
+                    <Text style={{ fontFamily: fonts.bold, fontSize: 12, color: isSelected ? colors.accent : colors.dim }}>
                       {opt}m
                     </Text>
                   </TouchableOpacity>
@@ -278,80 +247,16 @@ export default function Settings() {
             </Text>
           </TouchableOpacity>
 
-          <SectionLabel>DATA</SectionLabel>
-
-          <View className="py-3 border-b" style={rowBorder}>
-            <Text
-              style={{
-                color: colors.dim,
-                fontFamily: fonts.regular,
-                fontSize: 12,
-                letterSpacing: 0.5,
-                marginBottom: 8,
-              }}
-            >
-              API KEY
-            </Text>
-            <TextInput
-              className="rounded px-3 py-2"
-              style={{
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                color: colors.dim,
-                fontFamily: fonts.regular,
-                fontSize: 12,
-              }}
-              value={apiKey}
-              onChangeText={saveApiKey}
-              placeholder="Enter API key"
-              placeholderTextColor={colors.faint}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          <View className="py-3 border-b" style={rowBorder}>
-            <Text
-              style={{
-                color: colors.dim,
-                fontFamily: fonts.regular,
-                fontSize: 12,
-                letterSpacing: 0.5,
-                marginBottom: 8,
-              }}
-            >
-              API URL
-            </Text>
-            <TextInput
-              className="rounded px-3 py-2"
-              style={{
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                color: colors.dim,
-                fontFamily: fonts.regular,
-                fontSize: 12,
-              }}
-              value={settings.apiUrl}
-              onChangeText={(v) => update({ apiUrl: v })}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
+          {/* ── More Tools ── */}
           <SectionLabel>MORE TOOLS</SectionLabel>
-          <LinkRow
-            label="CHROME EXTENSION"
-            url="https://chromewebstore.google.com/detail/nfdcdhkgoiohipbhoalpnenhincbpnlc"
-          />
+          <LinkRow label="CHROME EXTENSION" url="https://chromewebstore.google.com/detail/nfdcdhkgoiohipbhoalpnenhincbpnlc" />
           <LinkRow label="MCP FOR CLAUDE" url="https://tushcmd.github.io/fns-fe/mcp/" />
           <LinkRow label="API DOCS" url="https://tushcmd.github.io/fns-fe/apiv1/" />
           <LinkRow label="EVENT TAXONOMY" url="https://tushcmd.github.io/fns-fe/event-taxonomy/" />
           <LinkRow label="GITHUB" url="https://github.com/tushcmd/fnewsteer" />
           <LinkRow label="𝕏 @0xtush" url="https://x.com/0xtush" />
 
+          {/* ── Development ── */}
           <SectionLabel>DEVELOPMENT</SectionLabel>
           <TouchableOpacity
             className="py-3 border-b"
@@ -364,6 +269,7 @@ export default function Settings() {
             </Text>
           </TouchableOpacity>
 
+          {/* ── Legal ── */}
           <SectionLabel>LEGAL</SectionLabel>
           <LinkRow label="PRIVACY POLICY" url="https://tushcmd.github.io/fns-fe/privacy/" />
           <LinkRow label="TERMS OF SERVICE" url="https://tushcmd.github.io/fns-fe/terms/" />

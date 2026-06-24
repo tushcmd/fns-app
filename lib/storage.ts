@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { DEFAULT_API_URL } from '../constants/pairs';
+import { DEFAULT_API_URL, DEFAULT_API_KEY } from '../constants/pairs';
 
 const KEYS = {
   watchlist: 'fns:watchlist',
@@ -74,17 +74,14 @@ export async function updateSettings(patch: Partial<Settings>): Promise<Settings
   return updated;
 }
 
-// ── API Key ───────────────────────────────────────────────────────────────────
+// ── API Key — bundled by default, no user input needed ────────────────────────
 export async function getApiKey(): Promise<string> {
   try {
-    return (await SecureStore.getItemAsync(SECURE_KEYS.apiKey)) ?? '';
+    const stored = await SecureStore.getItemAsync(SECURE_KEYS.apiKey);
+    return stored || DEFAULT_API_KEY;
   } catch {
-    return '';
+    return DEFAULT_API_KEY;
   }
-}
-
-export async function setApiKey(key: string): Promise<void> {
-  await SecureStore.setItemAsync(SECURE_KEYS.apiKey, key);
 }
 
 // ── Onboarding ────────────────────────────────────────────────────────────────
