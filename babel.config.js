@@ -3,8 +3,7 @@
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'nativewind/babel',
-      // reanimated MUST be last
+      // NativeWind v5 preview: styling is handled via Metro + PostCSS, not Babel
       'react-native-reanimated/plugin',
     ],
   };
