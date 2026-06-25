@@ -4,7 +4,6 @@
   Switch,
   TouchableOpacity,
   ScrollView,
-  TextInput,
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,8 +12,9 @@ import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useWatchlist } from '../../../hooks/useWatchlist';
 import { useSettings } from '../../../hooks/useSettings';
-import { DEFAULT_PAIRS } from '../../../constants/pairs';
 import { colors, fonts, alpha } from '../../../constants/theme';
+import { PairPickerModal } from '../../../components/settings/PairPickerModal';
+import { WatchlistManager } from '../../../components/settings/WatchlistManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NOTIFY_OPTIONS: Array<5 | 10 | 15 | 30> = [5, 10, 15, 30];
@@ -66,10 +66,9 @@ function LinkRow({ label, url }: { label: string; url: string }) {
 }
 
 export default function Settings() {
-  const { pairs, add, remove } = useWatchlist();
+  const { pairs, add, remove, reorder } = useWatchlist();
   const { settings, update } = useSettings();
   const [showPicker, setShowPicker] = useState(false);
-  const [customPair, setCustomPair] = useState('');
 
   async function sendTestNotification() {
     await Notifications.scheduleNotificationAsync({
@@ -79,15 +78,6 @@ export default function Settings() {
       },
       trigger: null,
     });
-  }
-
-  async function addCustomPair() {
-    const upper = customPair.toUpperCase().trim();
-    if (upper.length >= 3) {
-      await add(upper);
-      setCustomPair('');
-      setShowPicker(false);
-    }
   }
 
   async function resetOnboarding() {
@@ -113,27 +103,12 @@ export default function Settings() {
           {/* ── Watchlist ── */}
           <SectionLabel>WATCHLIST</SectionLabel>
 
-          {pairs.map((pair) => (
-            <View
-              key={pair}
-              className="flex-row items-center justify-between py-3 border-b"
-              style={rowBorder}
-            >
-              <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1 }}>
-                {pair}
-              </Text>
-              <TouchableOpacity onPress={() => remove(pair)} activeOpacity={0.7}>
-                <Text style={{ color: colors.urgent, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 1 }}>
-                  REMOVE
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+          <WatchlistManager pairs={pairs} onRemove={remove} onReorder={reorder} />
 
           <TouchableOpacity
             className="py-3 border-b"
             style={rowBorder}
-            onPress={() => setShowPicker(!showPicker)}
+            onPress={() => setShowPicker(true)}
             activeOpacity={0.7}
           >
             <Text style={{ color: colors.accent, fontFamily: fonts.bold, fontSize: 12, letterSpacing: 2 }}>
@@ -141,60 +116,12 @@ export default function Settings() {
             </Text>
           </TouchableOpacity>
 
-          {showPicker && (
-            <View className="py-3 border-b" style={rowBorder}>
-              <View className="flex-row flex-wrap gap-2 mb-3">
-                {DEFAULT_PAIRS.filter((p) => !pairs.includes(p)).map((p) => (
-                  <TouchableOpacity
-                    key={p}
-                    className="rounded px-3 py-1.5"
-                    style={{
-                      backgroundColor: colors.surface,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                    }}
-                    onPress={() => { add(p); setShowPicker(false); }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={{ color: colors.dim, fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1 }}>
-                      {p}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <View className="flex-row gap-2">
-                <TextInput
-                  className="flex-1 rounded px-3 py-2"
-                  style={{
-                    backgroundColor: colors.surface,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    color: colors.text,
-                    fontFamily: fonts.regular,
-                    fontSize: 12,
-                  }}
-                  placeholder="Custom pair (e.g. GBPCAD)"
-                  placeholderTextColor={colors.faint}
-                  value={customPair}
-                  onChangeText={setCustomPair}
-                  autoCapitalize="characters"
-                  onSubmitEditing={addCustomPair}
-                />
-                <TouchableOpacity
-                  className="rounded px-4 items-center justify-center"
-                  style={{
-                    backgroundColor: colors.surface,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                  onPress={addCustomPair}
-                  activeOpacity={0.7}
-                >
-                  <Text style={{ color: colors.accent, fontFamily: fonts.bold, fontSize: 14 }}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          <PairPickerModal
+            visible={showPicker}
+            onClose={() => setShowPicker(false)}
+            onAdd={(pair) => { add(pair); setShowPicker(false); }}
+            watchedPairs={pairs}
+          />
 
           {/* ── Notifications ── */}
           <SectionLabel>NOTIFICATIONS</SectionLabel>

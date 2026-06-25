@@ -1,4 +1,12 @@
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRef, useEffect } from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 import { SafetyBadge } from '@/components/ui/SafetyBadge';
 import { usePairCheck } from '@/hooks/usePairCheck';
 import { colors, fonts, alpha } from '@/constants/theme';
@@ -20,6 +28,26 @@ function timeUntil(isoString: string): string {
 
 export function PairCard({ pair, onPress }: Props) {
   const { data, isLoading, isError } = usePairCheck(pair);
+  const prevStatus = useRef<boolean | null>(null);
+
+  const glowOpacity = useSharedValue(0);
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (data?.safe_to_trade != null && prevStatus.current != null && prevStatus.current !== data.safe_to_trade) {
+      glowOpacity.value = withSequence(
+        withTiming(0.4, { duration: 200, easing: Easing.out(Easing.ease) }),
+        withTiming(0, { duration: 600, easing: Easing.in(Easing.ease) })
+      );
+      scale.value = withSequence(
+        withTiming(1.015, { duration: 150, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 300, easing: Easing.in(Easing.ease) })
+      );
+    }
+    if (data?.safe_to_trade != null) {
+      prevStatus.current = data.safe_to_trade;
+    }
+  }, [data?.safe_to_trade, glowOpacity, scale]);
 
   const borderColor = data
     ? data.safe_to_trade
@@ -33,62 +61,86 @@ export function PairCard({ pair, onPress }: Props) {
       : colors.blocked
     : colors.border;
 
+  const glowColor = data?.safe_to_trade === false ? colors.blocked : colors.safe;
+
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const animatedGlowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={{
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor,
-        borderRadius: 2,
-        marginBottom: 8,
-        overflow: 'hidden',
-      }}
-    >
-      <View
+    <Animated.View style={animatedCardStyle}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 2,
-          backgroundColor: accentBarColor,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor,
+          borderRadius: 2,
+          marginBottom: 8,
+          overflow: 'hidden',
         }}
-      />
+      >
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: glowColor,
+              borderRadius: 2,
+            },
+            animatedGlowStyle,
+          ]}
+        />
 
-      <View style={{ paddingHorizontal: 16, paddingVertical: 16, paddingLeft: 20 }}>
-        <View className="flex-row items-center justify-between mb-2">
-          <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 15, letterSpacing: 1 }}>
-            {pair}
-          </Text>
-          {isLoading && <ActivityIndicator size="small" color={colors.dim} />}
-          {isError && (
-            <Text style={{ color: colors.urgent, fontFamily: fonts.regular, fontSize: 11 }}>ERROR</Text>
+        <View
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            backgroundColor: accentBarColor,
+          }}
+        />
+
+        <View style={{ paddingHorizontal: 16, paddingVertical: 16, paddingLeft: 20 }}>
+          <View className="flex-row items-center justify-between mb-2">
+            <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 15, letterSpacing: 1 }}>
+              {pair}
+            </Text>
+            {isLoading && <ActivityIndicator size="small" color={colors.dim} />}
+            {isError && (
+              <Text style={{ color: colors.urgent, fontFamily: fonts.regular, fontSize: 11 }}>ERROR</Text>
+            )}
+            {data && <SafetyBadge safe={data.safe_to_trade} />}
+          </View>
+
+          {data && (
+            <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
+              {data.safe_to_trade
+                ? 'No active blackout windows'
+                : data.blocking_events
+                    .map((e) => `${e.title} · clears in ${timeUntil(e.window_end)}`)
+                    .join('  ·  ')}
+            </Text>
           )}
-          {data && <SafetyBadge safe={data.safe_to_trade} />}
+          {isLoading && !data && (
+            <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
+              Checking…
+            </Text>
+          )}
+          {isError && (
+            <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
+              Could not reach API
+            </Text>
+          )}
         </View>
-
-        {data && (
-          <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
-            {data.safe_to_trade
-              ? 'No active blackout windows'
-              : data.blocking_events
-                  .map((e) => `${e.title} · clears in ${timeUntil(e.window_end)}`)
-                  .join('  ·  ')}
-          </Text>
-        )}
-        {isLoading && !data && (
-          <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
-            Checking…
-          </Text>
-        )}
-        {isError && (
-          <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
-            Could not reach API
-          </Text>
-        )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
