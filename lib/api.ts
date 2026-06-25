@@ -1,4 +1,5 @@
 import { getApiKey, getSettings } from '../lib/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface BlockingEvent {
   title: string;
@@ -58,23 +59,74 @@ export interface HealthResponse {
   cache_populated: boolean;
 }
 
-async function apiFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
+export interface CachedResponse<T> {
+  data: T;
+  cachedAt: number;
+  stale: boolean;
+}
+
+const CACHE_PREFIX = 'fns:apiCache:';
+
+function cacheKey(path: string, params: Record<string, string>): string {
+  const sorted = Object.entries(params).sort(([a], [b]) => a.localeCompare(b));
+  return `${CACHE_PREFIX}${path}?${sorted.map(([k, v]) => `${k}=${v}`).join('&')}`;
+}
+
+async function getCached<T>(key: string): Promise<CachedResponse<T> | null> {
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CachedResponse<T>;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+async function setCache<T>(key: string, data: T): Promise<void> {
+  try {
+    const entry: CachedResponse<T> = { data, cachedAt: Date.now(), stale: false };
+    await AsyncStorage.setItem(key, JSON.stringify(entry));
+  } catch {
+    // ignore cache write failures
+  }
+}
+
+export async function getCacheAge(key: string): Promise<number | null> {
+  const cached = await getCached(key);
+  if (!cached) return null;
+  return Date.now() - cached.cachedAt;
+}
+
+async function apiFetch<T>(path: string, params: Record<string, string> = {}): Promise<CachedResponse<T>> {
   const settings = await getSettings();
   const apiKey = await getApiKey();
   const url = new URL(`${settings.apiUrl}${path}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString(), {
-    headers: { 'X-API-Key': apiKey },
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
-  return res.json() as Promise<T>;
+  const key = cacheKey(path, params);
+
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { 'X-API-Key': apiKey },
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as T;
+    await setCache(key, data);
+    return { data, cachedAt: Date.now(), stale: false };
+  } catch (err) {
+    const cached = await getCached<T>(key);
+    if (cached) {
+      return { data: cached.data, cachedAt: cached.cachedAt, stale: true };
+    }
+    throw err;
+  }
 }
 
 export async function checkSafeToTrade(
   symbol: string,
   includeMedium = false,
   windowMinutes?: number
-): Promise<CheckResponse> {
+): Promise<CachedResponse<CheckResponse>> {
   const params: Record<string, string> = { symbol };
   if (includeMedium) params.include_medium = 'true';
   if (windowMinutes) params.window_minutes = String(windowMinutes);
@@ -85,7 +137,7 @@ export async function getUpcomingEvents(
   currency?: string,
   includeMedium = false,
   windowMinutes?: number
-): Promise<UpcomingResponse> {
+): Promise<CachedResponse<UpcomingResponse>> {
   const params: Record<string, string> = {};
   if (currency) params.currency = currency;
   if (includeMedium) params.include_medium = 'true';
@@ -97,7 +149,7 @@ export async function getBlackoutZones(
   currency?: string,
   includeMedium = false,
   windowMinutes?: number
-): Promise<BlackoutZonesResponse> {
+): Promise<CachedResponse<BlackoutZonesResponse>> {
   const params: Record<string, string> = {};
   if (currency) params.currency = currency;
   if (includeMedium) params.include_medium = 'true';

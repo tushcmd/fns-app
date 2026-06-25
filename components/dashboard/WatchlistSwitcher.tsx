@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity, Modal, Pressable, FlatList } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 import { NamedWatchlist } from '@/lib/storage';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function WatchlistSwitcher({ lists, activeName, onSelect }: Props) {
+  const colors = useColors();
   const [visible, setVisible] = useState(false);
 
   function handleSelect(name: string) {

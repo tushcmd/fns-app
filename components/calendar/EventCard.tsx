@@ -1,7 +1,8 @@
 import { View, Text } from 'react-native';
 import { ImpactBadge } from '@/components/ui/ImpactBadge';
 import { NewsEvent } from '@/lib/api';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 function fmtTime(iso: string) {
   return new Date(iso).toUTCString().slice(17, 22) + ' UTC';
@@ -11,6 +12,7 @@ function fmtWindow(start: string, end: string) {
 }
 
 export function EventCard({ event }: { event: NewsEvent }) {
+  const colors = useColors();
   const isHigh = event.impact === 'High';
 
   return (

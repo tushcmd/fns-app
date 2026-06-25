@@ -21,6 +21,7 @@ export interface Settings {
   includeMedium: boolean;
   windowMinutesOverride: number | null;
   apiUrl: string;
+  themeMode: 'dark' | 'light' | 'system';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
   includeMedium: false,
   windowMinutesOverride: null,
   apiUrl: DEFAULT_API_URL,
+  themeMode: 'dark',
 };
 
 // ── Watchlist ─────────────────────────────────────────────────────────────────

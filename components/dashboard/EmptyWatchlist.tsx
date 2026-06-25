@@ -1,8 +1,10 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 export function EmptyWatchlist() {
+  const colors = useColors();
   return (
     <View className="flex-1 items-center justify-center px-8">
       <Text style={{ color: colors.accent, fontFamily: fonts.regular, fontSize: 32, marginBottom: 24 }}>

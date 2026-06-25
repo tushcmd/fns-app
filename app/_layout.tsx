@@ -15,6 +15,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { getHasOnboarded } from "../lib/storage";
 import { registerBackgroundFetch } from "../lib/background";
+import { ThemeProvider, useTheme } from "../providers/ThemeProvider";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -25,10 +26,11 @@ const queryClient = new QueryClient({
     },
 });
 
-export default function RootLayout() {
+function RootLayoutInner() {
     const [ready, setReady] = useState(false);
     const [onboarded, setOnboarded] = useState<boolean>(false);
     const [checked, setChecked] = useState(false);
+    const { isDark } = useTheme();
 
     const [fontsLoaded] = useFonts({
         JetBrainsMono_400Regular,
@@ -55,11 +57,11 @@ export default function RootLayout() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <QueryClientProvider client={queryClient}>
-                <StatusBar style="light" />
+                <StatusBar style={isDark ? "light" : "dark"} />
                 <Stack
                     screenOptions={{
                         headerShown: false,
-                        contentStyle: { backgroundColor: "#0a0a0b" },
+                        contentStyle: { backgroundColor: isDark ? "#0a0a0b" : "#f5f5f7" },
                     }}
                 >
                     {onboarded ? (
@@ -70,5 +72,13 @@ export default function RootLayout() {
                 </Stack>
             </QueryClientProvider>
         </GestureHandlerRootView>
+    );
+}
+
+export default function RootLayout() {
+    return (
+        <ThemeProvider>
+            <RootLayoutInner />
+        </ThemeProvider>
     );
 }

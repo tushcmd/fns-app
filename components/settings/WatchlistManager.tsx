@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 interface Props {
   pairs: string[];
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function WatchlistManager({ pairs, onRemove, onReorder }: Props) {
+  const colors = useColors();
   function moveUp(index: number) {
     if (index <= 0) return;
     const next = [...pairs];

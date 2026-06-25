@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { requestNotificationPermissions } from '../../lib/notifications';
 import { setHasOnboarded } from '../../lib/storage';
-import { colors, fonts, alpha } from '../../constants/theme';
+import { fonts, alpha } from '../../constants/theme';
+import { useColors } from '../../providers/ThemeProvider';
 
 async function finish() {
   await setHasOnboarded();
@@ -11,6 +12,7 @@ async function finish() {
 }
 
 export default function OnboardingNotifications() {
+  const colors = useColors();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <View className="flex-1 px-6 pt-12 pb-10 justify-between">

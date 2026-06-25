@@ -1,9 +1,10 @@
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { getUpcomingEvents, NewsEvent } from '@/lib/api';
+import { getUpcomingEvents, NewsEvent, CachedResponse, UpcomingResponse } from '@/lib/api';
 import { useSettings } from '@/hooks/useSettings';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 function fmtTime(iso: string) {
   return new Date(iso).toUTCString().slice(17, 22) + ' UTC';
@@ -47,16 +48,20 @@ function getNextBlockedEvent(events: NewsEvent[]): NewsEvent | null {
 }
 
 export function NextEventCard() {
+  const colors = useColors();
   const { settings } = useSettings();
   const [, setTick] = useState(0);
 
-  const { data, isLoading } = useQuery({
+  const { data: cachedData, isLoading } = useQuery<CachedResponse<UpcomingResponse>>({
     queryKey: ['upcoming-dashboard', settings?.includeMedium],
     queryFn: () => getUpcomingEvents(undefined, settings?.includeMedium ?? false),
     staleTime: 5 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
     enabled: !!settings,
   });
+
+  const data = cachedData?.data;
+  const isStale = cachedData?.stale ?? false;
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 10000);
@@ -164,9 +169,16 @@ export function NextEventCard() {
         ) : nextEvent ? (
           <>
             <View className="flex-row items-center justify-between mb-2">
-              <Text style={{ color: colors.faint, fontFamily: fonts.bold, fontSize: 11, letterSpacing: 2 }}>
-                NEXT EVENT
-              </Text>
+              <View className="flex-row items-center gap-2">
+                <Text style={{ color: colors.faint, fontFamily: fonts.bold, fontSize: 11, letterSpacing: 2 }}>
+                  NEXT EVENT
+                </Text>
+                {isStale && (
+                  <Text style={{ color: colors.blocked, fontFamily: fonts.regular, fontSize: 9, letterSpacing: 0.5 }}>
+                    ↻ cached
+                  </Text>
+                )}
+              </View>
               {countdown && (
                 <View
                   style={{

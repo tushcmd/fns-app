@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { checkSafeToTrade, CheckResponse } from '../lib/api';
+import { checkSafeToTrade, CheckResponse, CachedResponse } from '../lib/api';
 import { useSettings } from '../hooks/useSettings';
 
 const REFETCH_INTERVAL = 5 * 60 * 1000;
@@ -7,7 +7,7 @@ const REFETCH_INTERVAL = 5 * 60 * 1000;
 export function usePairCheck(symbol: string) {
   const { settings } = useSettings();
 
-  return useQuery<CheckResponse, Error>({
+  return useQuery<CachedResponse<CheckResponse>, Error>({
     queryKey: ['check', symbol, settings?.includeMedium, settings?.windowMinutesOverride],
     queryFn: () =>
       checkSafeToTrade(

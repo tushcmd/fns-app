@@ -1,5 +1,6 @@
 import { View, Text } from 'react-native';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 interface Props {
   safe: boolean;
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function SafetyBadge({ safe, size = 'sm' }: Props) {
+  const colors = useColors();
   const isLg = size === 'lg';
   const dotSize = isLg ? 10 : 8;
   const fontSize = isLg ? 13 : 11;

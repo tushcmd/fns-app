@@ -17,7 +17,8 @@ import { useWatchlist } from '../../../hooks/useWatchlist';
 import { useWatchlists } from '../../../hooks/useWatchlists';
 import { useSettings } from '../../../hooks/useSettings';
 import { useActivityLog } from '../../../hooks/useActivityLog';
-import { colors, fonts, alpha } from '../../../constants/theme';
+import { fonts, alpha } from '../../../constants/theme';
+import { useColors, useTheme } from '../../../providers/ThemeProvider';
 import { PairPickerModal } from '../../../components/settings/PairPickerModal';
 import { WatchlistManager } from '../../../components/settings/WatchlistManager';
 import { ActivityLogView } from '../../../components/settings/ActivityLogView';
@@ -25,53 +26,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NOTIFY_OPTIONS: Array<5 | 10 | 15 | 30> = [5, 10, 15, 30];
 
-const rowBorder = { borderBottomWidth: 1, borderBottomColor: colors.border };
-
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <Text
-      style={{
-        color: colors.faint,
-        fontFamily: fonts.regular,
-        fontSize: 12,
-        letterSpacing: 2,
-        marginBottom: 12,
-        marginTop: 24,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="flex-row items-center justify-between py-3 border-b" style={rowBorder}>
-      <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5 }}>
-        {label}
-      </Text>
-      {children}
-    </View>
-  );
-}
-
-function LinkRow({ label, url }: { label: string; url: string }) {
-  return (
-    <TouchableOpacity
-      className="flex-row items-center justify-between py-3 border-b"
-      style={rowBorder}
-      onPress={() => Linking.openURL(url)}
-      activeOpacity={0.7}
-    >
-      <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5 }}>
-        {label}
-      </Text>
-      <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 12 }}>↗</Text>
-    </TouchableOpacity>
-  );
-}
-
 export default function Settings() {
+  const colors = useColors();
+  const { mode, setMode } = useTheme();
   const { pairs, add, remove, reorder } = useWatchlist();
   const { lists, activeName, create, remove: deleteList, refresh } = useWatchlists();
   const { settings, update } = useSettings();
@@ -80,6 +37,53 @@ export default function Settings() {
   const [showNewList, setShowNewList] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const { entries: logEntries, clear: clearLog } = useActivityLog();
+
+  const rowBorder = { borderBottomWidth: 1, borderBottomColor: colors.border };
+
+  function sectionLabel(text: string) {
+    return (
+      <Text
+        style={{
+          color: colors.faint,
+          fontFamily: fonts.regular,
+          fontSize: 12,
+          letterSpacing: 2,
+          marginBottom: 12,
+          marginTop: 24,
+        }}
+      >
+        {text}
+      </Text>
+    );
+  }
+
+  function row(label: string, children: React.ReactNode) {
+    return (
+      <View className="flex-row items-center justify-between py-3 border-b" style={rowBorder}>
+        <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5 }}>
+          {label}
+        </Text>
+        {children}
+      </View>
+    );
+  }
+
+  function linkRow(label: string, url: string) {
+    return (
+      <TouchableOpacity
+        key={label}
+        className="flex-row items-center justify-between py-3 border-b"
+        style={rowBorder}
+        onPress={() => Linking.openURL(url)}
+        activeOpacity={0.7}
+      >
+        <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5 }}>
+          {label}
+        </Text>
+        <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 12 }}>↗</Text>
+      </TouchableOpacity>
+    );
+  }
 
   async function sendTestNotification() {
     await Notifications.scheduleNotificationAsync({
@@ -140,7 +144,7 @@ export default function Settings() {
         <View className="px-5">
 
           {/* ── Watchlists ── */}
-          <SectionLabel>WATCHLISTS</SectionLabel>
+          {sectionLabel('WATCHLISTS')}
 
           {lists.map((list) => (
             <View
@@ -240,9 +244,7 @@ export default function Settings() {
           )}
 
           {/* ── Active Watchlist Pairs ── */}
-          <SectionLabel>
-            {activeName.toUpperCase()} — PAIRS
-          </SectionLabel>
+          {sectionLabel(`${activeName.toUpperCase()} — PAIRS`)}
 
           <WatchlistManager pairs={pairs} onRemove={remove} onReorder={reorder} />
 
@@ -265,16 +267,16 @@ export default function Settings() {
           />
 
           {/* ── Notifications ── */}
-          <SectionLabel>NOTIFICATIONS</SectionLabel>
+          {sectionLabel('NOTIFICATIONS')}
 
-          <Row label="INCLUDE MEDIUM IMPACT">
+          {row('INCLUDE MEDIUM IMPACT', <>
             <Switch
               value={settings.includeMedium}
               onValueChange={(v) => { void update({ includeMedium: v }); }}
               trackColor={{ false: colors.border, true: colors.accent + '50' }}
               thumbColor={colors.accent}
             />
-          </Row>
+          </>)}
 
           <View className="py-3 border-b" style={rowBorder}>
             <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5, marginBottom: 12 }}>
@@ -315,8 +317,35 @@ export default function Settings() {
             </Text>
           </TouchableOpacity>
 
+          {/* ── Theme ── */}
+          {sectionLabel('THEME')}
+
+          <View className="flex-row gap-2 py-3 border-b" style={rowBorder}>
+            {(['dark', 'light', 'system'] as const).map((opt) => {
+              const isSelected = mode === opt;
+              const label = opt === 'system' ? 'AUTO' : opt.toUpperCase();
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  className="flex-1 py-2 rounded items-center"
+                  style={{
+                    backgroundColor: isSelected ? alpha(colors.accent, 0.1) : colors.surface,
+                    borderWidth: 1,
+                    borderColor: isSelected ? alpha(colors.accent, 0.4) : colors.border,
+                  }}
+                  onPress={() => setMode(opt)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontFamily: fonts.bold, fontSize: 12, color: isSelected ? colors.accent : colors.dim }}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           {/* ── Activity Log ── */}
-          <SectionLabel>ACTIVITY LOG</SectionLabel>
+          {sectionLabel('ACTIVITY LOG')}
 
           <TouchableOpacity
             className="flex-row items-center justify-between py-3 border-b"
@@ -351,16 +380,16 @@ export default function Settings() {
           </Modal>
 
           {/* ── More Tools ── */}
-          <SectionLabel>MORE TOOLS</SectionLabel>
-          <LinkRow label="CHROME EXTENSION" url="https://chromewebstore.google.com/detail/nfdcdhkgoiohipbhoalpnenhincbpnlc" />
-          <LinkRow label="MCP FOR CLAUDE" url="https://tushcmd.github.io/fns-fe/mcp/" />
-          <LinkRow label="API DOCS" url="https://tushcmd.github.io/fns-fe/apiv1/" />
-          <LinkRow label="EVENT TAXONOMY" url="https://tushcmd.github.io/fns-fe/event-taxonomy/" />
-          <LinkRow label="GITHUB" url="https://github.com/tushcmd/fnewsteer" />
-          <LinkRow label="𝕏 @0xtush" url="https://x.com/0xtush" />
+          {sectionLabel('MORE TOOLS')}
+          {linkRow('CHROME EXTENSION', 'https://chromewebstore.google.com/detail/nfdcdhkgoiohipbhoalpnenhincbpnlc')}
+          {linkRow('MCP FOR CLAUDE', 'https://tushcmd.github.io/fns-fe/mcp/')}
+          {linkRow('API DOCS', 'https://tushcmd.github.io/fns-fe/apiv1/')}
+          {linkRow('EVENT TAXONOMY', 'https://tushcmd.github.io/fns-fe/event-taxonomy/')}
+          {linkRow('GITHUB', 'https://github.com/tushcmd/fnewsteer')}
+          {linkRow('𝕏 @0xtush', 'https://x.com/0xtush')}
 
           {/* ── Development ── */}
-          <SectionLabel>DEVELOPMENT</SectionLabel>
+          {sectionLabel('DEVELOPMENT')}
           <TouchableOpacity
             className="py-3 border-b"
             style={rowBorder}
@@ -373,10 +402,10 @@ export default function Settings() {
           </TouchableOpacity>
 
           {/* ── Legal ── */}
-          <SectionLabel>LEGAL</SectionLabel>
-          <LinkRow label="PRIVACY POLICY" url="https://tushcmd.github.io/fns-fe/privacy/" />
-          <LinkRow label="TERMS OF SERVICE" url="https://tushcmd.github.io/fns-fe/terms/" />
-          <LinkRow label="DISCLAIMER" url="https://tushcmd.github.io/fns-fe/disclaimer/" />
+          {sectionLabel('LEGAL')}
+          {linkRow('PRIVACY POLICY', 'https://tushcmd.github.io/fns-fe/privacy/')}
+          {linkRow('TERMS OF SERVICE', 'https://tushcmd.github.io/fns-fe/terms/')}
+          {linkRow('DISCLAIMER', 'https://tushcmd.github.io/fns-fe/disclaimer/')}
 
           <View className="py-8 items-center">
             <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 2 }}>
