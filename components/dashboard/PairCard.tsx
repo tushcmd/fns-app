@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafetyBadge } from '@/components/ui/SafetyBadge';
 import { usePairCheck } from '@/hooks/usePairCheck';
+import { addActivityLogEntry } from '@/lib/storage';
 import { colors, fonts, alpha } from '@/constants/theme';
 
 interface Props {
@@ -43,11 +44,20 @@ export function PairCard({ pair, onPress }: Props) {
         withTiming(1.015, { duration: 150, easing: Easing.out(Easing.ease) }),
         withTiming(1, { duration: 300, easing: Easing.in(Easing.ease) })
       );
+      const blocking = !data.safe_to_trade && data.blocking_events.length > 0
+        ? data.blocking_events[0].title
+        : undefined;
+      void addActivityLogEntry({
+        pair,
+        fromSafe: prevStatus.current,
+        toSafe: data.safe_to_trade,
+        blockingEvent: blocking,
+      });
     }
     if (data?.safe_to_trade != null) {
       prevStatus.current = data.safe_to_trade;
     }
-  }, [data?.safe_to_trade, glowOpacity, scale]);
+  }, [data?.safe_to_trade, glowOpacity, scale, pair, data?.blocking_events]);
 
   const borderColor = data
     ? data.safe_to_trade
