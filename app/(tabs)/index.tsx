@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useWatchlist } from '../../hooks/useWatchlist';
 import { PairCard } from '../../components/dashboard/PairCard';
 import { EmptyWatchlist } from '../../components/dashboard/EmptyWatchlist';
+import { NextEventCard } from '../../components/dashboard/NextEventCard';
 import { colors, fonts } from '../../constants/theme';
 
 function UTCClock() {
@@ -27,7 +28,10 @@ export default function Dashboard() {
 
   async function onRefresh() {
     setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ['check'] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['check'] }),
+      queryClient.invalidateQueries({ queryKey: ['upcoming-dashboard'] }),
+    ]);
     setRefreshing(false);
   }
 
@@ -52,17 +56,20 @@ export default function Dashboard() {
           contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }) => <PairCard pair={item} />}
           ListHeaderComponent={
-            <Text
-              style={{
-                color: colors.faint,
-                fontFamily: fonts.regular,
-                fontSize: 12,
-                letterSpacing: 2,
-                marginBottom: 16,
-              }}
-            >
-              WATCHLIST — {pairs.length} PAIR{pairs.length > 1 ? 'S' : ''}
-            </Text>
+            <>
+              <NextEventCard />
+              <Text
+                style={{
+                  color: colors.faint,
+                  fontFamily: fonts.regular,
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  marginBottom: 16,
+                }}
+              >
+                WATCHLIST — {pairs.length} PAIR{pairs.length > 1 ? 'S' : ''}
+              </Text>
+            </>
           }
           refreshControl={
             <RefreshControl
