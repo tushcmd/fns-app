@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fnewsteer",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

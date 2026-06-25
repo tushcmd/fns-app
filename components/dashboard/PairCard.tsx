@@ -10,7 +10,8 @@ import Animated, {
 import { SafetyBadge } from '@/components/ui/SafetyBadge';
 import { usePairCheck } from '@/hooks/usePairCheck';
 import { addActivityLogEntry } from '@/lib/storage';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 interface Props {
   pair: string;
@@ -28,7 +29,10 @@ function timeUntil(isoString: string): string {
 }
 
 export function PairCard({ pair, onPress }: Props) {
-  const { data, isLoading, isError } = usePairCheck(pair);
+  const colors = useColors();
+  const { data: cachedData, isLoading, isError } = usePairCheck(pair);
+  const data = cachedData?.data;
+  const isStale = cachedData?.stale ?? false;
   const prevStatus = useRef<boolean | null>(null);
 
   const glowOpacity = useSharedValue(0);
@@ -144,9 +148,14 @@ export function PairCard({ pair, onPress }: Props) {
               Checking…
             </Text>
           )}
-          {isError && (
+          {isError && !data && (
             <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 11, letterSpacing: 0.5 }}>
               Could not reach API
+            </Text>
+          )}
+          {isStale && data && (
+            <Text style={{ color: colors.blocked, fontFamily: fonts.regular, fontSize: 10, letterSpacing: 0.5, marginTop: 2 }}>
+              ↻ cached
             </Text>
           )}
         </View>

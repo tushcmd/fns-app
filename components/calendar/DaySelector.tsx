@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function DaySelector({ selected, onSelect, eventCounts }: Props) {
+  const colors = useColors();
   return (
     <View
       style={{

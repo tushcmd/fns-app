@@ -4,13 +4,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useWatchlist } from '../../hooks/useWatchlist';
 import { useWatchlists } from '../../hooks/useWatchlists';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { PairCard } from '../../components/dashboard/PairCard';
 import { EmptyWatchlist } from '../../components/dashboard/EmptyWatchlist';
 import { NextEventCard } from '../../components/dashboard/NextEventCard';
 import { WatchlistSwitcher } from '../../components/dashboard/WatchlistSwitcher';
-import { colors, fonts } from '../../constants/theme';
+import { StaleDataBanner } from '../../components/ui/StaleDataBanner';
+import { fonts } from '../../constants/theme';
+import { useColors } from '../../providers/ThemeProvider';
 
 function UTCClock() {
+  const colors = useColors();
   const [time, setTime] = useState(new Date().toUTCString().slice(17, 25));
   useEffect(() => {
     const id = setInterval(() => setTime(new Date().toUTCString().slice(17, 25)), 1000);
@@ -24,8 +28,10 @@ function UTCClock() {
 }
 
 export default function Dashboard() {
+  const colors = useColors();
   const { pairs, loading } = useWatchlist();
   const { lists, activeName, switchTo } = useWatchlists();
+  const { isOnline } = useNetworkStatus();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,6 +60,10 @@ export default function Dashboard() {
         </View>
         <UTCClock />
       </View>
+
+      {!isOnline && (
+        <StaleDataBanner stale={true} />
+      )}
 
       {loading ? null : pairs.length === 0 ? (
         <EmptyWatchlist />

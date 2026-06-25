@@ -2,11 +2,13 @@ import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { getUpcomingEvents, NewsEvent } from '../../lib/api';
+import { getUpcomingEvents, NewsEvent, CachedResponse, UpcomingResponse } from '../../lib/api';
 import { EventCard } from '../../components/calendar/EventCard';
 import { DaySelector } from '../../components/calendar/DaySelector';
 import { useSettings } from '../../hooks/useSettings';
-import { colors, fonts } from '../../constants/theme';
+import { fonts } from '../../constants/theme';
+import { useColors } from '../../providers/ThemeProvider';
+import { StaleDataBanner } from '../../components/ui/StaleDataBanner';
 
 function getWeekDates(): Date[] {
   const today = new Date();
@@ -26,17 +28,20 @@ function todayIndex(): number {
 }
 
 export default function Calendar() {
+  const colors = useColors();
   const { settings } = useSettings();
   const [selectedDay, setDay] = useState(todayIndex);
   const weekDates = getWeekDates();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data: cachedData, isLoading, isError } = useQuery<CachedResponse<UpcomingResponse>>({
     queryKey: ['upcoming', settings?.includeMedium],
     queryFn: () => getUpcomingEvents(undefined, settings?.includeMedium ?? false),
     staleTime: 10 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
     enabled: !!settings,
   });
+
+  const data = cachedData?.data;
 
   function eventsForDay(i: number): NewsEvent[] {
     const target = weekDates[i];
@@ -75,6 +80,8 @@ export default function Calendar() {
           HIGH-IMPACT EVENTS · THIS WEEK · UTC
         </Text>
       </View>
+
+      <StaleDataBanner stale={cachedData?.stale ?? false} cachedAt={cachedData?.cachedAt} />
 
       <DaySelector
         selected={selectedDay}

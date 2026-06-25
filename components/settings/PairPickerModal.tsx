@@ -2,7 +2,8 @@ import { View, Text, Modal, TouchableOpacity, TextInput, FlatList, Pressable } f
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { DEFAULT_PAIRS } from '@/constants/pairs';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 interface Props {
   visible: boolean;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function PairPickerModal({ visible, onClose, onAdd, watchedPairs }: Props) {
+  const colors = useColors();
   const [search, setSearch] = useState('');
 
   const available = DEFAULT_PAIRS.filter((p) => !watchedPairs.includes(p));

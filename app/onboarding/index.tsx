@@ -1,9 +1,11 @@
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, fonts, alpha } from '../../constants/theme';
+import { fonts, alpha } from '../../constants/theme';
+import { useColors } from '../../providers/ThemeProvider';
 
 export default function OnboardingIndex() {
+  const colors = useColors();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>

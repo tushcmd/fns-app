@@ -1,23 +1,28 @@
 import { View, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { getBlackoutZones } from '../../lib/api';
+import { getBlackoutZones, CachedResponse, BlackoutZonesResponse } from '../../lib/api';
 import { useSettings } from '../../hooks/useSettings';
 import { useWatchlist } from '../../hooks/useWatchlist';
 import { HeatmapGrid } from '../../components/heatmap/HeatmapGrid';
-import { colors, fonts } from '../../constants/theme';
+import { fonts } from '../../constants/theme';
+import { useColors } from '../../providers/ThemeProvider';
+import { StaleDataBanner } from '../../components/ui/StaleDataBanner';
 
 export default function Heatmap() {
+  const colors = useColors();
   const { settings } = useSettings();
   const { pairs } = useWatchlist();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data: cachedData, isLoading, isError } = useQuery<CachedResponse<BlackoutZonesResponse>>({
     queryKey: ['blackout-zones', settings?.includeMedium],
     queryFn: () => getBlackoutZones(undefined, settings?.includeMedium ?? false),
     staleTime: 10 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
     enabled: !!settings,
   });
+
+  const data = cachedData?.data;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -40,6 +45,8 @@ export default function Heatmap() {
           BLACKOUT MINUTES BY CURRENCY · THIS WEEK · UTC
         </Text>
       </View>
+
+      <StaleDataBanner stale={cachedData?.stale ?? false} cachedAt={cachedData?.cachedAt} />
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">

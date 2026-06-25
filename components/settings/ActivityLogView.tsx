@@ -1,6 +1,7 @@
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 import { ActivityLogEntry } from '@/lib/storage';
 
 function fmtTime(ts: number) {
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function ActivityLogView({ entries, onClear, onClose }: Props) {
+  const colors = useColors();
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <View

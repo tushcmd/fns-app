@@ -1,5 +1,6 @@
 import { View, Text, ScrollView } from 'react-native';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
@@ -82,24 +83,25 @@ function buildGrid(zones: Zone[], currencies: string[]): Map<string, CellData> {
   return grid;
 }
 
-function cellColor(minutes: number): string {
-  if (minutes === 0) return colors.surface;
-  if (minutes <= 15) return alpha('#f59e0b', 0.15);
-  if (minutes <= 30) return alpha('#f59e0b', 0.3);
-  if (minutes <= 60) return alpha('#f59e0b', 0.5);
-  return alpha('#ef4444', 0.5);
-}
-
-function cellBorder(minutes: number): string {
-  if (minutes === 0) return colors.border;
-  if (minutes <= 15) return alpha('#f59e0b', 0.2);
-  if (minutes <= 30) return alpha('#f59e0b', 0.35);
-  if (minutes <= 60) return alpha('#f59e0b', 0.5);
-  return alpha('#ef4444', 0.5);
-}
-
 export function HeatmapGrid({ zones, watchedPairs }: Props) {
+  const colors = useColors();
   const currencies = getCurrenciesFromPairs(watchedPairs);
+
+  function cellColor(minutes: number): string {
+    if (minutes === 0) return colors.surface;
+    if (minutes <= 15) return alpha('#f59e0b', 0.15);
+    if (minutes <= 30) return alpha('#f59e0b', 0.3);
+    if (minutes <= 60) return alpha('#f59e0b', 0.5);
+    return alpha('#ef4444', 0.5);
+  }
+
+  function cellBorder(minutes: number): string {
+    if (minutes === 0) return colors.border;
+    if (minutes <= 15) return alpha('#f59e0b', 0.2);
+    if (minutes <= 30) return alpha('#f59e0b', 0.35);
+    if (minutes <= 60) return alpha('#f59e0b', 0.5);
+    return alpha('#ef4444', 0.5);
+  }
   const grid = buildGrid(zones, currencies);
 
   if (currencies.length === 0) {

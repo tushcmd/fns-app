@@ -1,11 +1,13 @@
 import { View, Text } from 'react-native';
-import { colors, fonts, alpha } from '@/constants/theme';
+import { fonts, alpha } from '@/constants/theme';
+import { useColors } from '@/providers/ThemeProvider';
 
 interface Props {
   impact: string;
 }
 
 export function ImpactBadge({ impact }: Props) {
+  const colors = useColors();
   const isHigh = impact === 'High';
   return (
     <View
