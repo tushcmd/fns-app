@@ -3,7 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useWatchlist } from '../../hooks/useWatchlist';
-import { useWatchlists } from '../../hooks/useWatchlists';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { PairCard } from '../../components/dashboard/PairCard';
 import { EmptyWatchlist } from '../../components/dashboard/EmptyWatchlist';
@@ -29,14 +28,14 @@ function UTCClock() {
 
 export default function Dashboard() {
   const colors = useColors();
-  const { pairs, loading } = useWatchlist();
-  const { lists, activeName, switchTo } = useWatchlists();
+  const { pairs, lists, activeName, switchTo, refresh, loading } = useWatchlist();
   const { isOnline } = useNetworkStatus();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
   async function onRefresh() {
     setRefreshing(true);
+    await refresh();
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['check'] }),
       queryClient.invalidateQueries({ queryKey: ['upcoming-dashboard'] }),
