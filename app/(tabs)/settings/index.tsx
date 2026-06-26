@@ -14,7 +14,6 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useWatchlist } from '../../../hooks/useWatchlist';
-import { useWatchlists } from '../../../hooks/useWatchlists';
 import { useSettings } from '../../../hooks/useSettings';
 import { useActivityLog } from '../../../hooks/useActivityLog';
 import { fonts, alpha } from '../../../constants/theme';
@@ -29,8 +28,7 @@ const NOTIFY_OPTIONS: Array<5 | 10 | 15 | 30> = [5, 10, 15, 30];
 export default function Settings() {
   const colors = useColors();
   const { mode, setMode } = useTheme();
-  const { pairs, add, remove, reorder } = useWatchlist();
-  const { lists, activeName, create, remove: deleteList, refresh } = useWatchlists();
+  const { pairs, lists, activeName, add, remove, reorder, create, deleteList, switchTo, refresh } = useWatchlist();
   const { settings, update } = useSettings();
   const [showPicker, setShowPicker] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -105,7 +103,6 @@ export default function Settings() {
     await create(name, []);
     setNewListName('');
     setShowNewList(false);
-    await refresh();
   }
 
   async function handleDeleteList(name: string) {
@@ -115,12 +112,13 @@ export default function Settings() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          await deleteList(name);
-          await refresh();
-        },
+        onPress: () => deleteList(name),
       },
     ]);
+  }
+
+  async function handleSelectList(name: string) {
+    await switchTo(name);
   }
 
   async function resetOnboarding() {
@@ -147,10 +145,12 @@ export default function Settings() {
           {sectionLabel('WATCHLISTS')}
 
           {lists.map((list) => (
-            <View
+            <TouchableOpacity
               key={list.name}
               className="flex-row items-center justify-between py-3 border-b"
               style={rowBorder}
+              onPress={() => handleSelectList(list.name)}
+              activeOpacity={0.7}
             >
               <View className="flex-row items-center gap-2 flex-1">
                 <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 12, letterSpacing: 1 }}>
@@ -181,7 +181,7 @@ export default function Settings() {
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
 
           {showNewList ? (
