@@ -13,10 +13,14 @@ import {
 } from "@expo-google-fonts/jetbrains-mono";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { registerWidgetTaskHandler } from "react-native-android-widget";
 import { getHasOnboarded } from "../lib/storage";
 import { registerBackgroundFetch } from "../lib/background";
+import { widgetTaskHandler } from "../widgets/widget-task-handler";
 import { ThemeProvider, useTheme } from "../providers/ThemeProvider";
 import "../global.css";
+
+registerWidgetTaskHandler(widgetTaskHandler);
 
 SplashScreen.preventAutoHideAsync();
 

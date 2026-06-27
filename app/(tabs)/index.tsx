@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useWatchlist } from '../../hooks/useWatchlist';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { updateFNSWidget } from '../../lib/widget';
 import { PairCard } from '../../components/dashboard/PairCard';
 import { EmptyWatchlist } from '../../components/dashboard/EmptyWatchlist';
 import { NextEventCard } from '../../components/dashboard/NextEventCard';
@@ -40,6 +41,7 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['check'] }),
       queryClient.invalidateQueries({ queryKey: ['upcoming-dashboard'] }),
     ]);
+    void updateFNSWidget();
     setRefreshing(false);
   }
 

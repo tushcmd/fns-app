@@ -3,6 +3,7 @@ import * as TaskManager from 'expo-task-manager';
 import { getBlackoutZones } from '../lib/api';
 import { getWatchlist, getSettings } from '../lib/storage';
 import { processZonesForNotifications } from '../lib/notifications';
+import { updateFNSWidget } from '../lib/widget';
 
 export const BACKGROUND_TASK_NAME = 'fns-background-fetch';
 
@@ -19,6 +20,7 @@ TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
       settings.windowMinutesOverride ?? undefined
     );
     await processZonesForNotifications(result.zones, watchlist);
+    await updateFNSWidget();
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
     console.error('[FNS Background]', error);
