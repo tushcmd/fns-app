@@ -1,3 +1,5 @@
+'use no memo';
+
 import React from 'react';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { FNSStatusWidget } from './FNSStatusWidget';
@@ -5,10 +7,14 @@ import { getWatchlist, getSettings } from '../lib/storage';
 import { checkSafeToTrade, getUpcomingEvents } from '../lib/api';
 
 function fmtTime(iso: string): string {
-  const d = new Date(iso);
-  const hh = d.getUTCHours().toString().padStart(2, '0');
-  const mm = d.getUTCMinutes().toString().padStart(2, '0');
-  return `${hh}:${mm} UTC`;
+  try {
+    const d = new Date(iso);
+    const hh = d.getUTCHours().toString().padStart(2, '0');
+    const mm = d.getUTCMinutes().toString().padStart(2, '0');
+    return `${hh}:${mm} UTC`;
+  } catch {
+    return '--:-- UTC';
+  }
 }
 
 function getNextEvent(events: { event_time: string; title: string; currency: string }[]) {
@@ -28,13 +34,13 @@ function timeUntil(iso: string): string {
   return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
 }
 
-function renderFallback(isDark: boolean) {
+function renderFallback(isDark: boolean, message = 'Open FNS to load data') {
   return (
     <FNSStatusWidget
-      pair="—"
+      pair="FNS"
       safeToTrade={true}
-      statusText="LOADING"
-      detailText="Open FNS to load data"
+      statusText="—"
+      detailText={message}
       updatedAt={fmtTime(new Date().toISOString())}
       isDark={isDark}
     />
@@ -42,7 +48,15 @@ function renderFallback(isDark: boolean) {
 }
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
-  switch (props.widgetAction) {
+  const action = props.widgetAction;
+
+  // Always render something immediately for WIDGET_ADDED
+  // so Android doesn't think the widget failed
+  if (action === 'WIDGET_ADDED') {
+    props.renderWidget(renderFallback(true, 'Loading…'));
+  }
+
+  switch (action) {
     case 'WIDGET_ADDED':
     case 'WIDGET_UPDATE':
     case 'WIDGET_RESIZED': {
@@ -51,21 +65,27 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
           getWatchlist(),
           getSettings(),
         ]);
+
         const pair = pairs[0];
         const isDark = settings.themeMode !== 'light';
 
         if (!pair) {
-          props.renderWidget(renderFallback(isDark));
+          props.renderWidget(renderFallback(isDark, 'Add a pair in the FNS app'));
           break;
         }
 
-        const [checkResult, upcomingResult] = await Promise.all([
+        const [checkResult, upcomingResult] = await Promise.allSettled([
           checkSafeToTrade(pair, settings.includeMedium, settings.windowMinutesOverride ?? undefined),
-          getUpcomingEvents(undefined, settings.includeMedium).catch(() => null),
+          getUpcomingEvents(undefined, settings.includeMedium),
         ]);
 
-        const check = checkResult.data;
-        const upcoming = upcomingResult?.data;
+        if (checkResult.status === 'rejected') {
+          props.renderWidget(renderFallback(isDark, 'Could not reach API'));
+          break;
+        }
+
+        const check = checkResult.value.data;
+        const upcoming = upcomingResult.status === 'fulfilled' ? upcomingResult.value.data : null;
         const nextEvent = upcoming ? getNextEvent(upcoming.events) : null;
 
         let detailText = 'No active blackout windows';
@@ -87,12 +107,19 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
           />
         );
       } catch {
-        props.renderWidget(renderFallback(true));
+        // Last resort fallback — never let the widget crash
+        try {
+          props.renderWidget(renderFallback(true, 'Tap to open FNS'));
+        } catch {
+          // nothing we can do
+        }
       }
       break;
     }
+
     case 'WIDGET_CLICK':
       break;
+
     default:
       break;
   }

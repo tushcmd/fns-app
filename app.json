@@ -40,9 +40,8 @@
               "minHeight": "120dp",
               "targetCellWidth": 5,
               "targetCellHeight": 2,
-              "previewImage": "./assets/widget-preview/fns-status.png",
-              "updatePeriodMillis": 1800000,
-              "widgetFeatures": "reconfigurable"
+              "previewImage": "./assets/adaptive-icon.png",
+              "updatePeriodMillis": 1800000
             }
           ]
         }
