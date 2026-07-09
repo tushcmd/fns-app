@@ -19,9 +19,12 @@ function fmtTime(iso: string): string {
 
 function getNextEvent(events: { event_time: string; title: string; currency: string }[]) {
   const now = Date.now();
-  return events
-    .filter((e) => new Date(e.event_time).getTime() > now)
-    .sort((a, b) => new Date(a.event_time).getTime() - new Date(b.event_time).getTime())[0] ?? null;
+  return (
+    events
+      .filter((e) => new Date(e.event_time).getTime() > now)
+      .sort((a, b) => new Date(a.event_time).getTime() - new Date(b.event_time).getTime())[0] ??
+    null
+  );
 }
 
 function timeUntil(iso: string): string {
@@ -34,7 +37,12 @@ function timeUntil(iso: string): string {
   return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
 }
 
-function renderFallback(isDark: boolean, message = 'Open FNS to load data') {
+function renderFallback(
+  isDark: boolean,
+  message = 'Open FNS to load data',
+  widgetWidth?: number,
+  widgetHeight?: number
+) {
   return (
     <FNSStatusWidget
       pair="FNS"
@@ -43,17 +51,21 @@ function renderFallback(isDark: boolean, message = 'Open FNS to load data') {
       detailText={message}
       updatedAt={fmtTime(new Date().toISOString())}
       isDark={isDark}
+      widgetWidth={widgetWidth}
+      widgetHeight={widgetHeight}
     />
   );
 }
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
   const action = props.widgetAction;
+  const widgetWidth = props.widgetInfo?.width;
+  const widgetHeight = props.widgetInfo?.height;
 
   // Always render something immediately for WIDGET_ADDED
   // so Android doesn't think the widget failed
   if (action === 'WIDGET_ADDED') {
-    props.renderWidget(renderFallback(true, 'Loading…'));
+    props.renderWidget(renderFallback(true, 'Loading…', widgetWidth, widgetHeight));
   }
 
   switch (action) {
@@ -61,26 +73,31 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case 'WIDGET_UPDATE':
     case 'WIDGET_RESIZED': {
       try {
-        const [pairs, settings] = await Promise.all([
-          getWatchlist(),
-          getSettings(),
-        ]);
+        const [pairs, settings] = await Promise.all([getWatchlist(), getSettings()]);
 
         const pair = pairs[0];
         const isDark = settings.themeMode !== 'light';
 
         if (!pair) {
-          props.renderWidget(renderFallback(isDark, 'Add a pair in the FNS app'));
+          props.renderWidget(
+            renderFallback(isDark, 'Add a pair in the FNS app', widgetWidth, widgetHeight)
+          );
           break;
         }
 
         const [checkResult, upcomingResult] = await Promise.allSettled([
-          checkSafeToTrade(pair, settings.includeMedium, settings.windowMinutesOverride ?? undefined),
+          checkSafeToTrade(
+            pair,
+            settings.includeMedium,
+            settings.windowMinutesOverride ?? undefined
+          ),
           getUpcomingEvents(undefined, settings.includeMedium),
         ]);
 
         if (checkResult.status === 'rejected') {
-          props.renderWidget(renderFallback(isDark, 'Could not reach API'));
+          props.renderWidget(
+            renderFallback(isDark, 'Could not reach API', widgetWidth, widgetHeight)
+          );
           break;
         }
 
@@ -104,12 +121,14 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
             detailText={detailText}
             updatedAt={fmtTime(check.checked_at)}
             isDark={isDark}
+            widgetWidth={widgetWidth}
+            widgetHeight={widgetHeight}
           />
         );
       } catch {
         // Last resort fallback — never let the widget crash
         try {
-          props.renderWidget(renderFallback(true, 'Tap to open FNS'));
+          props.renderWidget(renderFallback(true, 'Tap to open FNS', widgetWidth, widgetHeight));
         } catch {
           // nothing we can do
         }
