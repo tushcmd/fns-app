@@ -85,9 +85,12 @@ export async function processZonesForNotifications(
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-  const { status } = await Notifications.requestPermissionsAsync();
+  const { status: existing, ios } = await Notifications.getPermissionsAsync();
+  const iosGranted = ios?.allowsAlert && ios?.allowsSound && ios?.allowsBadge;
+  if (existing === 'granted' && iosGranted) return true;
+  const { status } = await Notifications.requestPermissionsAsync({
+    ios: { allowAlert: true, allowSound: true, allowBadge: true },
+  });
   return status === 'granted';
 }
 
