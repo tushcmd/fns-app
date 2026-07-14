@@ -1,10 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { getBlackoutZones, getUpcomingEvents } from '../lib/api';
-import { processZonesForNotifications, processNewWeekNotification } from '../lib/notifications';
+import {
+  processZonesForNotifications,
+  processNewWeekNotification,
+  syncWeeklyCalendarReminder,
+} from '../lib/notifications';
 import { getWatchlist, getSettings } from '../lib/storage';
 
 async function refreshNotifications(): Promise<void> {
+  // Keep the weekly "new week" reminder scheduled. This is independent of the
+  // watchlist — it fires even when the app is fully closed, so it must run
+  // regardless of whether there are pairs to check below.
+  await syncWeeklyCalendarReminder();
+
   try {
     const watchlist = await getWatchlist();
     if (watchlist.length === 0) return;

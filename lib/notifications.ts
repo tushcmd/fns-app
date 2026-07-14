@@ -151,6 +151,50 @@ export async function processNewWeekNotification(events: NewsEvent[]): Promise<v
   );
 }
 
+const WEEKLY_REMINDER_ID = 'fns-weekly-calendar-reminder';
+
+/**
+ * Schedules a repeating weekly local notification that nudges the user to open
+ * FNS and load the new week's calendar. Unlike the data-driven check, this is
+ * OS-scheduled, so it fires even when the app has been fully closed all weekend
+ * — the pragmatic, no-backend guarantee of delivery.
+ *
+ * Fires every Sunday at 12:00 (device local time), around when ForexFactory
+ * typically publishes the upcoming week. Idempotent: it always cancels the
+ * previous instance first, so calling it repeatedly (on launch, on foreground,
+ * on toggle) never stacks duplicates. Respects the `notifyNewWeek` setting.
+ */
+export async function syncWeeklyCalendarReminder(): Promise<void> {
+  // Clear any previously-scheduled instance so we never stack duplicates.
+  try {
+    await Notifications.cancelScheduledNotificationAsync(WEEKLY_REMINDER_ID);
+  } catch {
+    // No existing reminder — nothing to cancel.
+  }
+
+  const settings = await getSettings();
+  if (!settings.notifyNewWeek) return;
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: WEEKLY_REMINDER_ID,
+      content: {
+        title: '📅 New trading week',
+        body: "A new ForexFactory week should be live — open FNS to load this week's calendar.",
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: 1, // 1 = Sunday
+        hour: 12,
+        minute: 0,
+      },
+    });
+  } catch (err) {
+    console.error('[FNS Notifications] weekly reminder schedule failed:', err);
+  }
+}
+
 export async function requestNotificationPermissions(): Promise<boolean> {
   const { status: existing, ios } = await Notifications.getPermissionsAsync();
   const iosGranted = ios?.allowsAlert && ios?.allowsSound && ios?.allowsBadge;
