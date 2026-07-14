@@ -32,7 +32,7 @@ export default function OnboardingIndex() {
                   marginTop: 4,
                 }}
               >
-                FUNDAMENTAL NEWS STEER
+                FNEWSTEER · FUNDAMENTAL ANALYSIS (NEWS) STEER
               </Text>
             </View>
 

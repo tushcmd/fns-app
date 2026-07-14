@@ -1,9 +1,22 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
+import { useEffect, useState } from "react";
 import { useColors } from "../../providers/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
+import { getHasOnboarded } from "../../lib/storage";
 
 export default function TabsLayout() {
     const colors = useColors();
+    const [onboarded, setOnboarded] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        getHasOnboarded().then(setOnboarded);
+    }, []);
+
+    // Still resolving onboarding state — render nothing to avoid a flash.
+    if (onboarded === null) return null;
+    // The `/` route lands here (tabs group owns `/`); send first-run users out.
+    if (!onboarded) return <Redirect href="/onboarding" />;
+
     return (
         <Tabs
             screenOptions={{

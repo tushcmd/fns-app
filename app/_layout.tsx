@@ -14,7 +14,6 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { registerWidgetTaskHandler } from 'react-native-android-widget';
-import { getHasOnboarded } from '../lib/storage';
 import { registerBackgroundFetch } from '../lib/background';
 import { widgetTaskHandler } from '../widgets/widget-task-handler';
 import { ThemeProvider, useTheme } from '../providers/ThemeProvider';
@@ -33,8 +32,6 @@ const queryClient = new QueryClient({
 
 function RootLayoutInner() {
   const [ready, setReady] = useState(false);
-  const [onboarded, setOnboarded] = useState<boolean>(false);
-  const [checked, setChecked] = useState(false);
   const { isDark } = useTheme();
   useNotifications();
 
@@ -48,9 +45,6 @@ function RootLayoutInner() {
   useEffect(() => {
     if (!fontsLoaded) return;
     async function prepare() {
-      const hasOnboarded = await getHasOnboarded();
-      setOnboarded(hasOnboarded);
-      setChecked(true);
       await registerBackgroundFetch();
       setReady(true);
       await SplashScreen.hideAsync();
@@ -58,8 +52,11 @@ function RootLayoutInner() {
     prepare();
   }, [fontsLoaded]);
 
-  if (!ready || !checked) return null;
+  if (!ready) return null;
 
+  // Onboarding routing is handled by a redirect gate in app/(tabs)/_layout.tsx.
+  // Screens are declared normally here — the `/` route resolves to the tabs
+  // group, which redirects first-run users to /onboarding.
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
@@ -69,7 +66,8 @@ function RootLayoutInner() {
             headerShown: false,
             contentStyle: { backgroundColor: isDark ? '#0a0a0b' : '#f5f5f7' },
           }}>
-          {onboarded ? <Stack.Screen name="(tabs)" /> : <Stack.Screen name="onboarding" />}
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" />
         </Stack>
       </QueryClientProvider>
     </GestureHandlerRootView>
