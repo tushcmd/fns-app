@@ -23,6 +23,7 @@ export interface Settings {
   windowMinutesOverride: number | null;
   apiUrl: string;
   themeMode: 'dark' | 'light' | 'system';
+  notifyNewWeek: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   windowMinutesOverride: null,
   apiUrl: DEFAULT_API_URL,
   themeMode: 'dark',
+  notifyNewWeek: true,
 };
 
 // ── Watchlist ─────────────────────────────────────────────────────────────────

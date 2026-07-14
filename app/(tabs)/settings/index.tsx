@@ -278,6 +278,15 @@ export default function Settings() {
             />
           </>)}
 
+          {row('NEW WEEK CALENDAR ALERT', <>
+            <Switch
+              value={settings.notifyNewWeek}
+              onValueChange={(v) => { void update({ notifyNewWeek: v }); }}
+              trackColor={{ false: colors.border, true: colors.accent + '50' }}
+              thumbColor={colors.accent}
+            />
+          </>)}
+
           <View className="py-3 border-b" style={rowBorder}>
             <Text style={{ color: colors.dim, fontFamily: fonts.regular, fontSize: 12, letterSpacing: 0.5, marginBottom: 12 }}>
               NOTIFY BEFORE WINDOW (MIN)

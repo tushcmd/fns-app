@@ -129,25 +129,26 @@ export async function processNewWeekNotification(events: NewsEvent[]): Promise<v
   const currentWeek = weekKeyForEvents(events);
   if (!currentWeek) return;
 
+  const settings = await getSettings();
   const lastSeen = await getLastSeenWeek();
 
-  // First run — just record the baseline, don't notify.
-  if (!lastSeen) {
-    await setLastSeenWeek(currentWeek);
-    return;
-  }
+  // Nothing changed — nothing to do.
+  if (currentWeek === lastSeen) return;
 
-  // Only notify when the calendar advances forward to a genuinely newer week.
-  if (currentWeek > lastSeen) {
-    await setLastSeenWeek(currentWeek);
-    await fireNow(
-      '📅 New week calendar is live',
-      "This week's ForexFactory events are out — check your blackout windows."
-    );
-  } else if (currentWeek !== lastSeen) {
-    // Data moved to an older/different key (e.g. API rollback). Re-sync silently.
-    await setLastSeenWeek(currentWeek);
-  }
+  // Advance the stored baseline whenever the week changes, regardless of whether
+  // the user has the alert enabled. This keeps re-enabling from firing a stale
+  // notification for a week that already rolled over.
+  await setLastSeenWeek(currentWeek);
+
+  // Don't notify on the very first run (fresh install), on a backward/rollback
+  // change, or when the user has opted out.
+  const isNewerWeek = lastSeen !== null && currentWeek > lastSeen;
+  if (!isNewerWeek || !settings.notifyNewWeek) return;
+
+  await fireNow(
+    '📅 New week calendar is live',
+    "This week's ForexFactory events are out — check your blackout windows."
+  );
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
