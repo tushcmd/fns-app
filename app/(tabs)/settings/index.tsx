@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import { syncWeeklyCalendarReminder } from '../../../lib/notifications';
 import { useWatchlist } from '../../../hooks/useWatchlist';
 import { useSettings } from '../../../hooks/useSettings';
 import { useActivityLog } from '../../../hooks/useActivityLog';
@@ -273,6 +274,20 @@ export default function Settings() {
             <Switch
               value={settings.includeMedium}
               onValueChange={(v) => { void update({ includeMedium: v }); }}
+              trackColor={{ false: colors.border, true: colors.accent + '50' }}
+              thumbColor={colors.accent}
+            />
+          </>)}
+
+          {row('NEW WEEK CALENDAR ALERT', <>
+            <Switch
+              value={settings.notifyNewWeek}
+              onValueChange={(v) => {
+                void (async () => {
+                  await update({ notifyNewWeek: v });
+                  await syncWeeklyCalendarReminder();
+                })();
+              }}
               trackColor={{ false: colors.border, true: colors.accent + '50' }}
               thumbColor={colors.accent}
             />

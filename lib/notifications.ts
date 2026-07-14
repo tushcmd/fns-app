@@ -1,6 +1,13 @@
 import * as Notifications from 'expo-notifications';
-import { BlackoutZone } from '../lib/api';
-import { isZoneNotified, markZoneNotified, getSettings } from '../lib/storage';
+import { BlackoutZone, NewsEvent } from '../lib/api';
+import {
+  isZoneNotified,
+  markZoneNotified,
+  getSettings,
+  getISOWeekKey,
+  getLastSeenWeek,
+  setLastSeenWeek,
+} from '../lib/storage';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -84,10 +91,117 @@ export async function processZonesForNotifications(
   }
 }
 
+/**
+ * Determines which ISO week a set of ForexFactory events belongs to by taking
+ * the most common week key across all events. This is robust against ordering
+ * and the occasional stray event that spills past the week boundary.
+ */
+function weekKeyForEvents(events: NewsEvent[]): string | null {
+  const counts = new Map<string, number>();
+  for (const e of events) {
+    const t = new Date(e.event_time).getTime();
+    if (Number.isNaN(t)) continue;
+    const key = getISOWeekKey(new Date(t));
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  if (counts.size === 0) return null;
+  let best: string | null = null;
+  let bestCount = -1;
+  for (const [key, count] of counts) {
+    if (count > bestCount) {
+      best = key;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+/**
+ * Detects when ForexFactory has published a new week's calendar and fires a
+ * one-time notification. Works by comparing the ISO week the upcoming events
+ * fall in against the last week we saw. When the API starts serving next week's
+ * data (over the weekend), the week key advances and we notify the user.
+ *
+ * The first time this runs (no stored week) it silently records the current
+ * week without notifying, so a fresh install / first launch doesn't nag.
+ */
+export async function processNewWeekNotification(events: NewsEvent[]): Promise<void> {
+  const currentWeek = weekKeyForEvents(events);
+  if (!currentWeek) return;
+
+  const settings = await getSettings();
+  const lastSeen = await getLastSeenWeek();
+
+  // Nothing changed — nothing to do.
+  if (currentWeek === lastSeen) return;
+
+  // Advance the stored baseline whenever the week changes, regardless of whether
+  // the user has the alert enabled. This keeps re-enabling from firing a stale
+  // notification for a week that already rolled over.
+  await setLastSeenWeek(currentWeek);
+
+  // Don't notify on the very first run (fresh install), on a backward/rollback
+  // change, or when the user has opted out.
+  const isNewerWeek = lastSeen !== null && currentWeek > lastSeen;
+  if (!isNewerWeek || !settings.notifyNewWeek) return;
+
+  await fireNow(
+    '📅 New week calendar is live',
+    "This week's ForexFactory events are out — check your blackout windows."
+  );
+}
+
+const WEEKLY_REMINDER_ID = 'fns-weekly-calendar-reminder';
+
+/**
+ * Schedules a repeating weekly local notification that nudges the user to open
+ * FNS and load the new week's calendar. Unlike the data-driven check, this is
+ * OS-scheduled, so it fires even when the app has been fully closed all weekend
+ * — the pragmatic, no-backend guarantee of delivery.
+ *
+ * Fires every Sunday at 12:00 (device local time), around when ForexFactory
+ * typically publishes the upcoming week. Idempotent: it always cancels the
+ * previous instance first, so calling it repeatedly (on launch, on foreground,
+ * on toggle) never stacks duplicates. Respects the `notifyNewWeek` setting.
+ */
+export async function syncWeeklyCalendarReminder(): Promise<void> {
+  // Clear any previously-scheduled instance so we never stack duplicates.
+  try {
+    await Notifications.cancelScheduledNotificationAsync(WEEKLY_REMINDER_ID);
+  } catch {
+    // No existing reminder — nothing to cancel.
+  }
+
+  const settings = await getSettings();
+  if (!settings.notifyNewWeek) return;
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: WEEKLY_REMINDER_ID,
+      content: {
+        title: '📅 New trading week',
+        body: "A new ForexFactory week should be live — open FNS to load this week's calendar.",
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: 1, // 1 = Sunday
+        hour: 12,
+        minute: 0,
+      },
+    });
+  } catch (err) {
+    console.error('[FNS Notifications] weekly reminder schedule failed:', err);
+  }
+}
+
 export async function requestNotificationPermissions(): Promise<boolean> {
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-  const { status } = await Notifications.requestPermissionsAsync();
+  const { status: existing, ios } = await Notifications.getPermissionsAsync();
+  const iosGranted = ios?.allowsAlert && ios?.allowsSound && ios?.allowsBadge;
+  if (existing === 'granted' && iosGranted) return true;
+  const { status } = await Notifications.requestPermissionsAsync({
+    ios: { allowAlert: true, allowSound: true, allowBadge: true },
+  });
   return status === 'granted';
 }
 
