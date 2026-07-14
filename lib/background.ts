@@ -1,8 +1,8 @@
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import { getBlackoutZones } from '../lib/api';
+import { getBlackoutZones, getUpcomingEvents } from '../lib/api';
 import { getWatchlist, getSettings } from '../lib/storage';
-import { processZonesForNotifications } from '../lib/notifications';
+import { processZonesForNotifications, processNewWeekNotification } from '../lib/notifications';
 import { updateFNSWidget } from '../lib/widget';
 
 export const BACKGROUND_TASK_NAME = 'fns-background-fetch';
@@ -20,6 +20,15 @@ TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
       settings.windowMinutesOverride ?? undefined
     );
     await processZonesForNotifications(result.zones, watchlist);
+
+    // Detect when ForexFactory publishes a new week's calendar and notify.
+    try {
+      const upcoming = await getUpcomingEvents(undefined, settings.includeMedium);
+      await processNewWeekNotification(upcoming.data.events);
+    } catch (err) {
+      console.error('[FNS Background] new-week check failed:', err);
+    }
+
     await updateFNSWidget();
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {

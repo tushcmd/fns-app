@@ -1,6 +1,13 @@
 import * as Notifications from 'expo-notifications';
-import { BlackoutZone } from '../lib/api';
-import { isZoneNotified, markZoneNotified, getSettings } from '../lib/storage';
+import { BlackoutZone, NewsEvent } from '../lib/api';
+import {
+  isZoneNotified,
+  markZoneNotified,
+  getSettings,
+  getISOWeekKey,
+  getLastSeenWeek,
+  setLastSeenWeek,
+} from '../lib/storage';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -81,6 +88,65 @@ export async function processZonesForNotifications(
         await markZoneNotified(advanceKey);
       }
     }
+  }
+}
+
+/**
+ * Determines which ISO week a set of ForexFactory events belongs to by taking
+ * the most common week key across all events. This is robust against ordering
+ * and the occasional stray event that spills past the week boundary.
+ */
+function weekKeyForEvents(events: NewsEvent[]): string | null {
+  const counts = new Map<string, number>();
+  for (const e of events) {
+    const t = new Date(e.event_time).getTime();
+    if (Number.isNaN(t)) continue;
+    const key = getISOWeekKey(new Date(t));
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  if (counts.size === 0) return null;
+  let best: string | null = null;
+  let bestCount = -1;
+  for (const [key, count] of counts) {
+    if (count > bestCount) {
+      best = key;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+/**
+ * Detects when ForexFactory has published a new week's calendar and fires a
+ * one-time notification. Works by comparing the ISO week the upcoming events
+ * fall in against the last week we saw. When the API starts serving next week's
+ * data (over the weekend), the week key advances and we notify the user.
+ *
+ * The first time this runs (no stored week) it silently records the current
+ * week without notifying, so a fresh install / first launch doesn't nag.
+ */
+export async function processNewWeekNotification(events: NewsEvent[]): Promise<void> {
+  const currentWeek = weekKeyForEvents(events);
+  if (!currentWeek) return;
+
+  const lastSeen = await getLastSeenWeek();
+
+  // First run — just record the baseline, don't notify.
+  if (!lastSeen) {
+    await setLastSeenWeek(currentWeek);
+    return;
+  }
+
+  // Only notify when the calendar advances forward to a genuinely newer week.
+  if (currentWeek > lastSeen) {
+    await setLastSeenWeek(currentWeek);
+    await fireNow(
+      '📅 New week calendar is live',
+      "This week's ForexFactory events are out — check your blackout windows."
+    );
+  } else if (currentWeek !== lastSeen) {
+    // Data moved to an older/different key (e.g. API rollback). Re-sync silently.
+    await setLastSeenWeek(currentWeek);
   }
 }
 

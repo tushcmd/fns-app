@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { getBlackoutZones } from '../lib/api';
-import { processZonesForNotifications } from '../lib/notifications';
+import { getBlackoutZones, getUpcomingEvents } from '../lib/api';
+import { processZonesForNotifications, processNewWeekNotification } from '../lib/notifications';
 import { getWatchlist, getSettings } from '../lib/storage';
 
 async function refreshNotifications(): Promise<void> {
@@ -15,6 +15,14 @@ async function refreshNotifications(): Promise<void> {
       settings.windowMinutesOverride ?? undefined
     );
     await processZonesForNotifications(result.zones, watchlist);
+
+    // Detect a freshly-published week calendar and notify once.
+    try {
+      const upcoming = await getUpcomingEvents(undefined, settings.includeMedium);
+      await processNewWeekNotification(upcoming.data.events);
+    } catch (err) {
+      console.error('[FNS Notifications] new-week check failed:', err);
+    }
   } catch (err) {
     console.error('[FNS Notifications] refresh failed:', err);
   }

@@ -10,6 +10,7 @@ const KEYS = {
   hasOnboarded: 'fns:hasOnboarded',
   notifiedZones: 'fns:notifiedZones',
   activityLog: 'fns:activityLog',
+  lastSeenWeek: 'fns:lastSeenWeek',
 } as const;
 
 const SECURE_KEYS = {
@@ -236,4 +237,34 @@ export async function addActivityLogEntry(entry: Omit<ActivityLogEntry, 'id' | '
 
 export async function clearActivityLog(): Promise<void> {
   await AsyncStorage.removeItem(KEYS.activityLog);
+}
+
+// ── New-week calendar tracking ────────────────────────────────────────────────
+
+/**
+ * Returns the ISO-8601 week key (e.g. "2026-W29") for a given date.
+ * Week 1 is the week containing the first Thursday of the year. This is stable
+ * across the Sat/Sun rollover, so it's a reliable signature for "which week's
+ * calendar" a set of ForexFactory events belongs to.
+ */
+export function getISOWeekKey(date: Date = new Date()): string {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  // Shift to the Thursday of the current week (ISO weeks are Mon-based).
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+export async function getLastSeenWeek(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(KEYS.lastSeenWeek);
+  } catch {
+    return null;
+  }
+}
+
+export async function setLastSeenWeek(weekKey: string): Promise<void> {
+  await AsyncStorage.setItem(KEYS.lastSeenWeek, weekKey);
 }
