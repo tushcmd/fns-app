@@ -250,3 +250,13 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
+
+/**
+ * Fires a test notification through the same channel-aware immediate path real
+ * alerts use, so it genuinely validates delivery (permission + channel), not
+ * just a default-channel post. Ensures setup first.
+ */
+export async function sendTestNotification(): Promise<void> {
+  await ensureNotificationSetup();
+  await fireNow('✅ FNS — Test Notification', 'Notifications are working correctly.');
+}

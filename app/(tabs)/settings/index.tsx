@@ -12,8 +12,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import * as Notifications from 'expo-notifications';
-import { syncWeeklyCalendarReminder } from '../../../lib/notifications';
+import { syncWeeklyCalendarReminder, sendTestNotification } from '../../../lib/notifications';
 import { useWatchlist } from '../../../hooks/useWatchlist';
 import { useSettings } from '../../../hooks/useSettings';
 import { useActivityLog } from '../../../hooks/useActivityLog';
@@ -82,16 +81,6 @@ export default function Settings() {
         <Text style={{ color: colors.faint, fontFamily: fonts.regular, fontSize: 12 }}>↗</Text>
       </TouchableOpacity>
     );
-  }
-
-  async function sendTestNotification() {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '✅ FNS — Test Notification',
-        body: 'Notifications are working correctly.',
-      },
-      trigger: null,
-    });
   }
 
   async function handleCreateList() {
