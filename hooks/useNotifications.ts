@@ -5,10 +5,15 @@ import {
   processZonesForNotifications,
   processNewWeekNotification,
   syncWeeklyCalendarReminder,
+  ensureNotificationSetup,
 } from '../lib/notifications';
 import { getWatchlist, getSettings } from '../lib/storage';
 
 async function refreshNotifications(): Promise<void> {
+  // Ensure the Android channel exists and OS-level permission is granted before
+  // scheduling anything — otherwise the OS silently drops every notification.
+  await ensureNotificationSetup();
+
   // Keep the weekly "new week" reminder scheduled. This is independent of the
   // watchlist — it fires even when the app is fully closed, so it must run
   // regardless of whether there are pairs to check below.

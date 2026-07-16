@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { BlackoutZone, NewsEvent } from '../lib/api';
 import {
   isZoneNotified,
@@ -9,6 +10,11 @@ import {
   setLastSeenWeek,
 } from '../lib/storage';
 
+// Android 8+ drops any notification that isn't posted to a channel. We create
+// one explicitly at MAX importance so alerts pop as heads-up with sound —
+// relying on the implicit default channel is what caused missed notifications.
+export const CHANNEL_ID = 'fns-alerts';
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -18,6 +24,40 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+/**
+ * Creates the Android notification channel. Idempotent and UI-free, so it's
+ * safe to call from the background task as well as the foreground. No-op on iOS.
+ */
+export async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+      name: 'FNS Alerts',
+      importance: Notifications.AndroidImportance.MAX,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      enableVibrate: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    });
+  } catch (err) {
+    console.error('[FNS Notifications] channel setup failed:', err);
+  }
+}
+
+/**
+ * Full setup for the foreground: ensures the Android channel exists AND that the
+ * OS-level permission is granted. Call this on app launch/resume — the in-app
+ * toggles are not the OS permission, so this is what actually enables delivery.
+ */
+export async function ensureNotificationSetup(): Promise<boolean> {
+  await ensureAndroidChannel();
+  return requestNotificationPermissions();
+}
+
+/** Immediate-fire trigger, carrying the Android channel so it isn't dropped. */
+const immediateTrigger =
+  Platform.OS === 'android' ? { channelId: CHANNEL_ID } : null;
 
 function zoneKey(zone: BlackoutZone): string {
   return `${zone.currency}__${zone.event}__${zone.start}`;
@@ -30,6 +70,7 @@ async function scheduleNotification(title: string, body: string, trigger: Date):
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: trigger,
+      channelId: CHANNEL_ID,
     },
   });
 }
@@ -37,7 +78,7 @@ async function scheduleNotification(title: string, body: string, trigger: Date):
 async function fireNow(title: string, body: string): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: { title, body, sound: true },
-    trigger: null,
+    trigger: immediateTrigger,
   });
 }
 
@@ -188,6 +229,7 @@ export async function syncWeeklyCalendarReminder(): Promise<void> {
         weekday: 1, // 1 = Sunday
         hour: 12,
         minute: 0,
+        channelId: CHANNEL_ID,
       },
     });
   } catch (err) {
@@ -207,4 +249,14 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 
 export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+/**
+ * Fires a test notification through the same channel-aware immediate path real
+ * alerts use, so it genuinely validates delivery (permission + channel), not
+ * just a default-channel post. Ensures setup first.
+ */
+export async function sendTestNotification(): Promise<void> {
+  await ensureNotificationSetup();
+  await fireNow('✅ FNS — Test Notification', 'Notifications are working correctly.');
 }

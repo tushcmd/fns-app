@@ -2,13 +2,21 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import { getBlackoutZones, getUpcomingEvents } from '../lib/api';
 import { getWatchlist, getSettings } from '../lib/storage';
-import { processZonesForNotifications, processNewWeekNotification } from '../lib/notifications';
+import {
+  processZonesForNotifications,
+  processNewWeekNotification,
+  ensureAndroidChannel,
+} from '../lib/notifications';
 import { updateFNSWidget } from '../lib/widget';
 
 export const BACKGROUND_TASK_NAME = 'fns-background-fetch';
 
 TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
   try {
+    // The channel may not exist yet if the task runs after a reboot before the
+    // app has been opened. Creating it is idempotent and UI-free.
+    await ensureAndroidChannel();
+
     const watchlist = await getWatchlist();
     if (watchlist.length === 0) {
       return BackgroundFetch.BackgroundFetchResult.NoData;

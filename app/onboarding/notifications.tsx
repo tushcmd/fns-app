@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { requestNotificationPermissions } from '../../lib/notifications';
+import { ensureNotificationSetup } from '../../lib/notifications';
 import { setHasOnboarded } from '../../lib/storage';
 import { fonts, alpha } from '../../constants/theme';
 import { useColors } from '../../providers/ThemeProvider';
@@ -120,7 +120,7 @@ export default function OnboardingNotifications() {
               marginBottom: 12,
             }}
             onPress={async () => {
-              await requestNotificationPermissions();
+              await ensureNotificationSetup();
               await finish();
             }}
             activeOpacity={0.7}
