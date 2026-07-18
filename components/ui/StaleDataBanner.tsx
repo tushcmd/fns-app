@@ -24,8 +24,9 @@ export function StaleDataBanner({ stale, cachedAt }: Props) {
 
   useEffect(() => {
     if (!stale || !cachedAt) return;
+    const at = cachedAt;
     function update() {
-      setAgeText(formatAge(Date.now() - cachedAt));
+      setAgeText(formatAge(Date.now() - at));
     }
     update();
     const id = setInterval(update, 30000);

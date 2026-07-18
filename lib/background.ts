@@ -27,7 +27,7 @@ TaskManager.defineTask(BACKGROUND_TASK_NAME, async () => {
       settings.includeMedium,
       settings.windowMinutesOverride ?? undefined
     );
-    await processZonesForNotifications(result.zones, watchlist);
+    await processZonesForNotifications(result.data.zones, watchlist);
 
     // Detect when ForexFactory publishes a new week's calendar and notify.
     try {
