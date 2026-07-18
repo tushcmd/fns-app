@@ -29,7 +29,7 @@ FNS watches the economic calendar and marks each pair on your watchlist as **CLE
 - **Android home-screen widget** — top pair status at a glance.
 
 ---
-
+<!-- 
 ## Screenshots
 
 > Drop images into `docs/screenshots/` with the filenames below and they'll render here.
@@ -191,7 +191,7 @@ Most behaviour is user-configurable in **Settings**:
 - The home-screen widget is **Android-only**; an iOS widget (via `expo-widgets`) is a future addition.
 - Guaranteed push delivery when the app is fully closed on iOS would require a server-side push backend (not currently implemented).
 
----
+--- -->
 
 ## License
 
