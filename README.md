@@ -1,5 +1,11 @@
 # FNS — FNEWSTEER
 
+![Expo SDK 56](https://img.shields.io/badge/Expo-SDK%2056-000020?logo=expo&logoColor=white)
+![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-3DDC84?logo=android&logoColor=white)
+![React Native](https://img.shields.io/badge/React%20Native-0.85-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
 **Fundamental Analysis (News) Steer** — a trading companion that tells you, at a glance, whether it's safe to trade a currency pair right now based on high-impact economic news.
 
 FNS watches the economic calendar and marks each pair on your watchlist as **CLEAR** or **BLOCKED**, warns you before a news blackout window opens, and keeps steering you even when the app is closed via notifications and a home-screen widget.
@@ -21,6 +27,20 @@ FNS watches the economic calendar and marks each pair on your watchlist as **CLE
 - **Offline mode** — the last API response is cached; a stale-data banner shows when you're offline.
 - **Light / dark / system theme.**
 - **Android home-screen widget** — top pair status at a glance.
+
+---
+
+## Screenshots
+
+> Drop images into `docs/screenshots/` with the filenames below and they'll render here.
+
+| Dashboard | Calendar | Heatmap |
+| --- | --- | --- |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Calendar](docs/screenshots/calendar.png) | ![Heatmap](docs/screenshots/heatmap.png) |
+
+| Settings | Onboarding | Android widget |
+| --- | --- | --- |
+| ![Settings](docs/screenshots/settings.png) | ![Onboarding](docs/screenshots/onboarding.png) | ![Widget](docs/screenshots/widget.png) |
 
 ---
 
@@ -170,6 +190,12 @@ Most behaviour is user-configurable in **Settings**:
 - Data is limited to the **current week** (ForexFactory weekly feed) — no history or multi-week look-ahead.
 - The home-screen widget is **Android-only**; an iOS widget (via `expo-widgets`) is a future addition.
 - Guaranteed push delivery when the app is fully closed on iOS would require a server-side push backend (not currently implemented).
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
 
 ---
 
