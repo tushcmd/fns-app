@@ -28,7 +28,7 @@ async function refreshNotifications(): Promise<void> {
       settings.includeMedium,
       settings.windowMinutesOverride ?? undefined
     );
-    await processZonesForNotifications(result.zones, watchlist);
+    await processZonesForNotifications(result.data.zones, watchlist);
 
     // Detect a freshly-published week calendar and notify once.
     try {
