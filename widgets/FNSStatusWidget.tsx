@@ -1,7 +1,18 @@
 'use no memo';
 
 import React from 'react';
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
+import { FlexWidget, TextWidget, type ColorProp } from 'react-native-android-widget';
+
+type WidgetPalette = {
+  bg: ColorProp;
+  surface: ColorProp;
+  text: ColorProp;
+  dim: ColorProp;
+  faint: ColorProp;
+  safe: ColorProp;
+  blocked: ColorProp;
+  accent: ColorProp;
+};
 
 interface FNSWidgetProps {
   pair: string;
@@ -14,7 +25,7 @@ interface FNSWidgetProps {
   widgetHeight?: number;
 }
 
-const DARK = {
+const DARK: WidgetPalette = {
   bg: '#111113',
   surface: '#1a1a1e',
   text: '#e8e8ed',
@@ -25,7 +36,7 @@ const DARK = {
   accent: '#fbbf24',
 };
 
-const LIGHT = {
+const LIGHT: WidgetPalette = {
   bg: '#f5f5f7',
   surface: '#ffffff',
   text: '#1a1a1e',
@@ -48,7 +59,7 @@ export function FNSStatusWidget(props: FNSWidgetProps) {
   return renderExpanded(props, c, statusColor);
 }
 
-function renderCompact(props: FNSWidgetProps, c: typeof DARK, statusColor: string) {
+function renderCompact(props: FNSWidgetProps, c: WidgetPalette, statusColor: ColorProp) {
   return (
     <FlexWidget
       style={{
@@ -101,7 +112,7 @@ function renderCompact(props: FNSWidgetProps, c: typeof DARK, statusColor: strin
   );
 }
 
-function renderExpanded(props: FNSWidgetProps, c: typeof DARK, statusColor: string) {
+function renderExpanded(props: FNSWidgetProps, c: WidgetPalette, statusColor: ColorProp) {
   return (
     <FlexWidget
       style={{
@@ -147,7 +158,6 @@ function renderExpanded(props: FNSWidgetProps, c: typeof DARK, statusColor: stri
           backgroundColor: c.faint,
           marginTop: 8,
           marginBottom: 8,
-          opacity: 0.3,
         }}
       />
 

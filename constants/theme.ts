@@ -20,7 +20,13 @@ export const darkColors = {
   faint: '#3a3a44',
 } as const;
 
-export const lightColors = {
+export type ColorKey = keyof typeof darkColors;
+// A theme is a full palette of the same keys; values are plain strings so the
+// dark and light palettes are mutually assignable (each `as const` palette
+// otherwise has incompatible string-literal types).
+export type ColorTheme = Record<ColorKey, string>;
+
+export const lightColors: ColorTheme = {
   bg: '#f5f5f7',
   surface: '#ffffff',
   surface2: '#f0f0f2',
@@ -32,10 +38,7 @@ export const lightColors = {
   text: '#1a1a1e',
   dim: '#6b6b7a',
   faint: '#a0a0aa',
-} as const;
-
-export type ColorTheme = typeof darkColors;
-export type ColorKey = keyof ColorTheme;
+};
 
 export function alpha(hex: string, opacity: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
