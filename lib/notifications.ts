@@ -168,10 +168,18 @@ function weekKeyForEvents(events: NewsEvent[]): string | null {
  */
 export async function processNewWeekNotification(events: NewsEvent[]): Promise<void> {
   const currentWeek = weekKeyForEvents(events);
-  if (!currentWeek) return;
+  const lastSeen = await getLastSeenWeek();
+
+  if (!currentWeek) {
+    // Between weeks the upcoming list can be empty (e.g. Saturday, after this
+    // week's events have passed and before ForexFactory publishes the next
+    // week). Seed a baseline from the calendar so the new week's first data is
+    // detected as an advance rather than swallowed as a silent first-run.
+    if (!lastSeen) await setLastSeenWeek(getISOWeekKey());
+    return;
+  }
 
   const settings = await getSettings();
-  const lastSeen = await getLastSeenWeek();
 
   // Nothing changed — nothing to do.
   if (currentWeek === lastSeen) return;
